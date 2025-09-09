@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Comparatif des imprimeurs francophones</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 20px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .filters label {
+      font-weight: bold;
+    }
+
+    .filters select {
+      padding: 5px;
+      min-width: 150px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #eee;
+    }
+
+    .highlight-forte {
+      background-color: #d4edda;
+    }
+
+    .highlight-moyenne {
+      background-color: #fff3cd;
+    }
+
+    .print-button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #0078d4;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .print-button:hover {
+      background-color: #005fa3;
+    }
+
+    .print-footer {
+      margin-top: 30px;
+      font-size: 14px;
+      text-align: center;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Comparatif des imprimeurs pour auto-édition francophone</h1>
+    <p>Filtrez les options selon vos besoins : type d'impression, localisation, distribution, compatibilité, pays.</p>
+
+    <div class="filters">
+      <label for="filter-type">Type :</label>
+      <select id="filter-type" onchange="applyFilters()">
+        <option value="all">Tous</option>
+        <option value="pod">POD</option>
+        <option value="short-run">Court tirage</option>
+        <option value="offset">Offset</option>
+      </select>
+
+      <label for="filter-location">Localisation :</label>
+      <select id="filter-location" onchange="applyFilters()">
+        <option value="all">Toutes</option>
+        <option value="local">Locale</option>
+        <option value="online">En ligne</option>
+      </select>
+
+      <label for="filter-distribution">Distribution :</label>
+      <select id="filter-distribution" onchange="applyFilters()">
+        <option value="all">Toutes</option>
+        <option value="manual">Manuelle</option>
+        <option value="integrated">Intégrée</option>
+      </select>
+
+      <label for="filter-compatibility">Compatibilité :</label>
+      <select id="filter-compatibility" onchange="applyFilters()">
+        <option value="all">Toutes</option>
+        <option value="forte">Forte</option>
+        <option value="moyenne">Moyenne</option>
+        <option value="faible">Faible</option>
+      </select>
+
+      <label for="filter-country">Pays :</label>
+      <select id="filter-country" onchange="applyFilters()">
+        <option value="all">Tous</option>
+        <option value="canada">Canada</option>
+        <option value="france">France</option>
+        <option value="belgique">Belgique</option>
+        <option value="suisse">Suisse</option>
+        <option value="afrique">Afrique</option>
+      </select>
+    </div>
+
+    <table id="printers-table">
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Type</th>
+          <th>Tirage</th>
+          <th>Reliure</th>
+          <th>Finitions</th>
+          <th>Services</th>
+          <th>Avantages</th>
+          <th>Limites</th>
+          <th>Localisation</th>
+          <th>Compatibilité</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 👉 Insère ici toutes les lignes <tr> que tu as déjà préparées -->
+        <!-- Exemple : -->
+        <tr data-type="pod" data-location="online" data-distribution="integrated" data-compatibility="moyenne" data-country="afrique">
+          <td><strong>SelfPub.org (Afrique du Sud)</strong> <i class="fas fa-globe icon online"></i> <i class="fas fa-sync-alt icon pod"></i></td>
+          <td>Plateforme d'auto-édition et POD</td>
+          <td>Dès 1 ex.</td>
+          <td>Dos carré collé (broché)</td>
+          <td>Formats courants, impression N&B/couleur</td>
+          <td>Distribution via leurs partenaires en Afrique du Sud et à l'international (limitée)</td>
+          <td>Permet une présence sur le marché africain, support aux auteurs locaux</td>
+          <td>Moins d'options de finition, logistique internationale à considérer pour les gros volumes, frais de port</td>
+          <td>Afrique du Sud (Plateforme en ligne)</td>
+          <td><span class="compatibility-moyenne">Moyenne</span></td>
+        </tr>
+        <!-- Ajoute les autres imprimeurs ici -->
+      </tbody>
+    </table>
+
+    <button class="print-button" onclick="window.print()">
+      <i class="fas fa-print"></i> Imprimer ce tableau
+    </button>
+
+    <div class="print-footer">
+      Comparatif réalisé par Olibokit – <span id="current-date"></span>
+    </div>
+  </div>
+
+  <script>
+    function applyFilters() {
+      const typeFilter = document.getElementById('filter-type').value;
+      const locationFilter = document.getElementById('filter-location').value;
+      const distributionFilter = document.getElementById('filter-distribution').value;
+      const compatibilityFilter = document.getElementById('filter-compatibility').value;
+      const countryFilter = document.getElementById('filter-country').value;
+
+      const table = document.getElementById('printers-table');
+      const rows = table.querySelectorAll('tbody tr');
+
+      rows.forEach(row => {
+        const rowType = row.dataset.type;
+        const rowLocation = row.dataset.location;
+        const rowDistribution = row.dataset.distribution;
+        const rowCompatibility = row.dataset.compatibility;
+        const rowCountry = row.dataset.country;
+
+        const matchesType = (typeFilter === 'all' || rowType === typeFilter);
+        const matchesLocation = (locationFilter === 'all' || rowLocation === locationFilter);
+        const matchesDistribution = (distributionFilter === 'all' || rowDistribution === distributionFilter);
+        const matchesCompatibility = (compatibilityFilter === 'all' || rowCompatibility === compatibilityFilter);
+        const matchesCountry = (countryFilter === 'all' || rowCountry === countryFilter);
+
+        if (matchesType && matchesLocation && matchesDistribution && matchesCompatibility && matchesCountry) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+
+        row.classList.remove('highlight-forte', 'highlight-moyenne');
+
+        if (row.style.display !== 'none') {
+          if (rowCompatibility === 'forte') {
+            row.classList.add('highlight-forte');
+          } else if (rowCompatibility === 'moyenne') {
+            row.classList.add('highlight-moyenne');
+          }
+        }
+      });
+    }
+
+    window.onload = function() {
+      const dateElement = document.getElementById('current-date');
+      const today = new Date();
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      dateElement.textContent = today.toLocaleDateString('fr-FR', options);
+      applyFilters();
+    };
+  </script>
+</body>
+</html>

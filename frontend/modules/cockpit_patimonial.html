@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <title>OliPLUS — Cockpit Patrimonial</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="data/style.css" />
+  <script src="data/injecteurCollage.js" defer></script>
+  <script src="data/dashboard.js" defer></script>
+  <script src="cockpitCharts.js" defer></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans px-6 py-10 transition-colors duration-300">
+
+  <!-- 🏷️ Titre cockpit -->
+  <header class="text-center mb-6">
+    <h1 class="text-3xl font-bold">OliPLUS — Cockpit Patrimonial ✍️</h1>
+    <button id="toggleDarkMode" class="mt-2 px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition">🌙 Mode Sombre</button>
+  </header>
+
+  <!-- 📎 Collage JSON cockpit -->
+  <section class="max-w-xl mx-auto mb-6 bg-white dark:bg-gray-800 shadow p-4 rounded">
+    <h2 class="text-lg font-bold mb-2">📎 Coller des fiches JSON</h2>
+    <textarea id="collageJSON" rows="8" class="w-full p-2 border rounded text-sm bg-gray-50 dark:bg-gray-900 dark:border-gray-700" placeholder="Colle ici un ou plusieurs objets JSON cockpit..."></textarea>
+    <button id="injecterCollage" class="w-full mt-2 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">📥 Injecter dans cockpit</button>
+  </section>
+
+  <!-- 💾 Export JSON -->
+  <div class="text-center mb-6">
+    <button id="exporterJSON" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">💾 Exporter classement cockpit</button>
+  </div>
+
+  <!-- 🧪 Filtres cockpit -->
+  <nav class="text-center mb-6 space-x-2">
+    <button class="filter-button active" onclick="filtrer('Tous', this)">Tous</button>
+    <button class="filter-button" onclick="filtrer('Nouveaux', this)">Nouveaux</button>
+    <button class="filter-button" onclick="filtrer('Droits', this)">Droits</button>
+    <button class="filter-button" onclick="filtrer('Numérisation', this)">Numérisation</button>
+    <button class="filter-button" onclick="filtrer('Révision', this)">Révision</button>
+    <button class="filter-button" onclick="filtrer('Publié', this)">Publié</button>
+  </nav>
+
+  <!-- 📘 Conteneur des livres -->
+  <main id="book-cards-container" class="space-y-6"></main>
+
+  <!-- 📊 Graphiques cockpit -->
+  <section class="max-w-4xl mx-auto mt-10 space-y-8">
+    <div>
+      <label for="statusFilter" class="block mb-2 font-semibold">Filtrer la roadmap :</label>
+      <select id="statusFilter" class="w-full p-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded">
+        <option value="all">Tous</option>
+        <option value="Complete">Terminés</option>
+        <option value="En cours">En cours</option>
+        <option value="Non démarré">Non démarrés</option>
+      </select>
+    </div>
+
+    <canvas id="roadmapProgressChart"></canvas>
+    <canvas id="validationChecklistChart"></canvas>
+    <canvas id="todoInventoryChart"></canvas>
+  </section>
+
+  <!-- 📥 Boîte message cockpit -->
+  <div id="customMessageBox" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-yellow-100 dark:bg-yellow-800 text-yellow-900 dark:text-yellow-100 px-4 py-2 rounded shadow hidden">
+    <span id="messageBoxText"></span>
+    <button id="messageBoxCloseButton" class="ml-4 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 px-2 py-1 rounded">Fermer</button>
+  </div>
+
+  <!-- 🌗 Toggle mode sombre -->
+  <script>
+    const toggleButton = document.getElementById("toggleDarkMode");
+    toggleButton.addEventListener("click", () => {
+      const root = document.documentElement;
+      root.classList.toggle("dark");
+      toggleButton.textContent = root.classList.contains("dark") ? "☀️ Mode Clair" : "🌙 Mode Sombre";
+    });
+  </script>
+</body>
+</html>

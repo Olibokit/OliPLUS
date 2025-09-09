@@ -1,0 +1,44 @@
+# Fichiers Python compilés
+__pycache__/
+*.pyc
+*.pyo
+
+# Caches et artefacts
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.cache/
+*.log
+
+# Environnements virtuels
+.env/
+.venv/
+venv/
+
+# Dépendances locales
+node_modules/
+dist/
+build/
+
+# Fichiers sensibles ou inutiles
+*.egg-info/
+*.sqlite3
+*.db
+*.pem
+*.key
+
+# Fichiers de config perso
+.env.local
+.env.dev
+.env.test
+
+# IDE et OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Dockerfiles spécifiques (si non utilisés dans ce build)
+Dockerfile.dev
+Dockerfile.ui
+Dockerfile.backend

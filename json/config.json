@@ -1,0 +1,188 @@
+{
+  "rootDir": "C:\\Users\\Olibokit\\OliPLUS",
+  "localVersion": "1.0.0",
+  "defaultMode": "Utilisateur",
+  "activeMode": "Utilisateur",
+  "streamlitPort": 8501,
+
+  "update": {
+    "appZipUrl": "https://tonserveur.com/update.zip",
+    "versionUrl": "https://tonserveur.com/version.txt",
+    "launcherVersionUrl": "https://tonserveur.com/launcher_version.txt",
+    "launcherScriptUrl": "https://tonserveur.com/lancer_oliplus.ps1"
+  },
+
+  "python": {
+    "manualPath": "C:\\Python312\\python.exe"
+  },
+
+  "shortcuts": {
+    "createDesktopShortcut": true,
+    "debugShortcut": false
+  },
+
+  "system": {
+    "eventLogSource": "OliPLUS",
+    "autoRestartOnGuiCrash": true,
+    "logRetentionDays": 7,
+    "enableHashVerification": true
+  },
+
+  "extensions": {
+    "enabled": {
+      "ventes": true,
+      "documents": true,
+      "auteurs": true,
+      "monitoring": false,
+      "analyse": false,
+      "export": false
+    },
+    "fileTypes": [
+      ".sh", ".spec", ".css", ".csv", ".pyi", ".html", ".java", ".js", ".json", ".jsx",
+      ".md", ".node", ".oliplus_egg", ".php", ".ps1", ".sql", ".ts", ".txt", ".xml", ".yaml"
+    ],
+    "scanFolder": "extensions"
+  },
+
+  "firestore": {
+    "enabled": true,
+    "projectId": "oliplus-cockpit",
+    "collection": "extensions",
+    "logCollection": "logs",
+    "firebaseKeyPath": "C:\\Users\\Olibokit\\OliPLUS\\firebase_key.json"
+  },
+
+  "postgres": {
+    "host": "localhost",
+    "port": 5432,
+    "user": "oliplus",
+    "password": "motdepasse",
+    "database": "cockpit_db",
+    "enableConnectionTest": true,
+    "enableMonitoring": true
+  },
+
+  "docker": {
+    "enabled": true,
+    "image": "oliplus/cockpit:latest",
+    "composeFile": "docker-compose.yml",
+    "checkDockerVersion": true,
+    "enableMonitoring": true
+  },
+
+  "streamlit": {
+    "enabled": true,
+    "port": 8501,
+    "host": "localhost",
+    "enableMonitoring": true,
+    "menuScript": "py/menu_streamlit.py"
+  },
+
+  "github": {
+    "ciEnabled": true,
+    "workflowFile": ".github/workflows/cockpit.yml",
+    "branch": "main"
+  },
+
+  "dashboardScripts": {
+    "Cockpit Principal": "cockpit.py",
+    "main": "main_dashboard.py",
+    "Documents & Stats": "cockpit_documents_and_stats.py",
+    "Préparation": "prepare_dashboard.py",
+    "Analyse": "analyse.py",
+    "Export": "export.py"
+  },
+
+  "webLauncherScript": "oliplus_web_launcher.py",
+
+  "modes": {
+    "Utilisateur": {
+      "verboseLogs": false,
+      "mockData": false,
+      "adminAccess": false,
+      "installDependencies": true
+    },
+    "Développeur": {
+      "verboseLogs": true,
+      "mockData": false,
+      "adminAccess": true,
+      "installDependencies": false
+    },
+    "Démo/Test": {
+      "verboseLogs": true,
+      "mockData": true,
+      "adminAccess": false,
+      "installDependencies": true
+    },
+    "Maintenance": {
+      "verboseLogs": true,
+      "mockData": false,
+      "adminAccess": true,
+      "installDependencies": false
+    }
+  },
+
+  "permissions": {
+    "allowLogout": true,
+    "allowRestart": true,
+    "adminOnlyOptions": [5, 6],
+    "restrictedScripts": ["prepare_dashboard.py"]
+  },
+
+  "notifications": {
+    "enableToast": true,
+    "enableEmailAlerts": false,
+    "emailRecipient": "admin@oliplus.local",
+    "slackWebhook": ""
+  },
+
+  "logging": {
+    "logToFile": true,
+    "logFilePath": "C:\\Users\\Olibokit\\OliPLUS\\logs\\oliplus.log",
+    "maxLogSizeMB": 10,
+    "logLevel": "INFO",
+    "logRotation": true,
+    "logFormat": "[{timestamp}] [{level}] {message}"
+  },
+
+  "monitoring": {
+    "enabled": true,
+    "checkIntervalSeconds": 60,
+    "modules": ["postgres", "streamlit", "docker"],
+    "alertOnFailure": true,
+    "retryCount": 3,
+    "retryDelaySeconds": 10
+  },
+
+  "interface": {
+    "enableWebDashboard": true,
+    "webDashboardScript": "oliplus_web_launcher.py",
+    "launchOnStart": false
+  },
+
+  "telemetry": {
+    "enabled": false,
+    "logUsageStats": true,
+    "anonymize": true
+  },
+
+  "dependencies": {
+    "python": ">=3.10",
+    "poetry": ">=1.8.0",
+    "docker": ">=24.0.0",
+    "streamlit": ">=1.26.0"
+  },
+
+  "backup": {
+    "enabled": true,
+    "targetFolder": "C:\\Users\\Olibokit\\OliPLUS\\backups",
+    "frequencyHours": 24,
+    "include": ["logs", "config", "extensions"]
+  },
+
+  "profiles": {
+    "local": ["Utilisateur", "Développeur"],
+    "cloud": ["Maintenance"],
+    "demo": ["Démo/Test"]
+  }
+}

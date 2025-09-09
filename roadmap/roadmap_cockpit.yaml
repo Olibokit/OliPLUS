@@ -1,0 +1,53 @@
+roadmap:
+  updated: "2025-09-03"
+  phases:
+    - name: "Phase 1 — Structuration"
+      actions:
+        - "Création des répertoires typés"
+        - "UUID Mayan + normalisation"
+        - "Intégrité via oli_integrity_check.py"
+    - name: "Phase 2 — Visualisation"
+      actions:
+        - "Dashboard HTML + Streamlit"
+        - "Scan fragments logiciels"
+        - "Inventaire cockpit"
+    - name: "Phase 3 — Annotation intelligente"
+      actions:
+        - "Classification typologique"
+        - "Indexation cockpit tags"
+        - "Recherche typée"
+    - name: "Phase 4 — Validation & Synchronisation"
+      actions:
+        - "Génération des fiches cockpit (generate_fiches_yaml.py)"
+        - "Synchronisation des modules (sync_manifest_with_modules.py)"
+        - "Affichage des validations (cockpit_validation_viewer.html)"
+
+modules:
+  - name: "oli_audit.py"
+    role: "Rapport cockpit typé"
+    dependencies:
+      - "oli_integrity_check.py"
+  - name: "cockpit_manifest_master.yaml"
+    role: "Backlog cockpitifié"
+    dependencies: []
+  - name: "roadmap_tracker_view.py"
+    role: "Vue stratégique cockpit"
+    dependencies:
+      - "roadmap_cockpit.yaml"
+  - name: "suggested_path_assistant"
+    role: "Assistant de chemin cockpit"
+    dependencies:
+      - "cockpit_manifest_master.yaml"
+
+status:
+  cockpit:
+    state: "✅ Validé"
+    last_audit: "2025-08-30"
+  visual:
+    state: "🟡 En cours"
+    blockers:
+      - "streamlit_layout.py"
+      - "modal_viewer.html"
+  strategic:
+    state: "✅ Piloté"
+    owner: "Olivier"

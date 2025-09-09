@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Inscription - OliPLUS</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f7fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .form-container {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      width: 350px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    label {
+      margin-top: 15px;
+      display: block;
+      font-weight: bold;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Créer un compte</h2>
+    <form method="POST">
+      <label for="username">Nom d'utilisateur</label>
+      <input id="username" name="username" placeholder="Entrez votre nom" required>
+
+      <label for="password">Mot de passe</label>
+      <input id="password" name="password" type="password" placeholder="Entrez votre mot de passe" required>
+
+      <label for="role">Rôle</label>
+      <select id="role" name="role" required>
+        <option value="admin">Admin</option>
+        <option value="dev">Développeur</option>
+        <option value="guest">Invité</option>
+      </select>
+
+      <button type="submit">Inscription</button>
+    </form>
+  </div>
+</body>
+</html>

@@ -1,0 +1,492 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+
+// Couleurs pour les graphiques (adaptées aux thèmes clair/sombre)
+const CHART_COLORS = [
+  '#4CAF50', '#2196F3', '#FFC107', '#FF5722', '#9C27B0', '#00BCD4', '#8BC34A', '#FF9800',
+  '#E91E63', '#673AB7', '#795548', '#607D8B', '#F44336', '#3F51B5', '#03A9F4', '#4CAF50'
+];
+
+const App = () => {
+  // --- État pour la projection globale du catalogue ---
+  const [exchangeRate, setExchangeRate] = useState(1.456); // Taux EUR vers CAD
+  const [currency, setCurrency] = useState('CAD'); // Devise par défaut à CAD
+  const [netTotalEUR, setNetTotalEUR] = useState(276600); // Total net en EUR (valeur de base)
+
+  // Données de simulation globales mises à jour pour le marché du livre 2025 (données fictives)
+  const simulationData = [
+    {
+      format: 'PDF / ePub directs',
+      salesPerBook: 900, // Augmentation des ventes estimées pour 2025
+      totalBooks: 39,
+      pricePerUnit: 6.50, // Légère augmentation de prix
+      estimatedGrossEUR: 210000,
+      estimatedNetEUR: 147000,
+    },
+    {
+      format: 'Kindle / Kobo',
+      salesPerBook: 450, // Augmentation des ventes estimées pour 2025
+      totalBooks: 39,
+      pricePerUnit: 5.20, // Légère augmentation de prix
+      estimatedGrossEUR: 85000,
+      estimatedNetEUR: 59500,
+    },
+    {
+      format: 'Impression à la carte',
+      salesPerBook: 220, // Légère augmentation des ventes estimées
+      totalBooks: 39,
+      pricePerUnit: 15.50, // Légère augmentation de prix
+      estimatedGrossEUR: 125000,
+      estimatedNetEUR: 87500,
+    },
+    {
+      format: 'Packs scolaires/licences',
+      salesPerBook: 130, // Légère augmentation des packs vendus
+      totalBooks: 1,
+      pricePerUnit: 125, // Légère augmentation de prix
+      estimatedGrossEUR: 16250,
+      estimatedNetEUR: 11375,
+      isPack: true,
+    },
+  ];
+
+  const totalGrossEstimatedEUR = simulationData.reduce((acc, item) => acc + item.estimatedGrossEUR, 0);
+  const totalNetEstimatedEUR = simulationData.reduce((acc, item) => acc + item.estimatedNetEUR, 0);
+
+  // Fonction utilitaire pour formater les valeurs en fonction de la devise sélectionnée
+  const formatCurrency = useCallback((value, fractDigits = 2) => {
+    const convertedValue = currency === 'EUR' ? value : value * exchangeRate;
+    return convertedValue.toLocaleString(undefined, {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: fractDigits,
+      maximumFractionDigits: fractDigits
+    });
+  }, [currency, exchangeRate]);
+
+  const chartDataGlobal = simulationData.map(item => ({
+    name: item.format,
+    "Chiffre d'affaires net": currency === 'EUR' ? item.estimatedNetEUR : item.estimatedNetEUR * exchangeRate,
+  }));
+
+  // Calcul dynamique du total net global en fonction des données de simulation
+  const currentNetTotalGlobal = currency === 'EUR' ? totalNetEstimatedEUR : totalNetEstimatedEUR * exchangeRate;
+
+
+  // --- État pour le calculateur de rentabilité de livre (du fichier analyse cout.pdf) ---
+  const [sellingPrice, setSellingPrice] = useState(23.85);
+  const [costPerUnit, setCostPerUnit] = useState(1.50);
+  const [unitsSold, setUnitsSold] = useState(500);
+  const [royaltyRate, setRoyaltyRate] = useState(10); // en %
+  const [platformCommission, setPlatformCommission] = useState(30); // en %
+  const [marketingCost, setMarketingCost] = useState(200);
+  const [adminCost, setAdminCost] = useState(100);
+  const [taxRate, setTaxRate] = useState(30); // en %
+
+  const [profitabilityResults, setProfitabilityResults] = useState(null);
+  const [showProfitabilityResults, setShowProfitabilityResults] = useState(false);
+
+  const calculateProfitability = useCallback(() => {
+    const sp = parseFloat(sellingPrice);
+    const cpu = parseFloat(costPerUnit);
+    const us = parseInt(unitsSold);
+    const rr = parseFloat(royaltyRate) / 100;
+    const pcr = parseFloat(platformCommission) / 100;
+    const mc = parseFloat(marketingCost);
+    const ac = parseFloat(adminCost);
+    const tr = parseFloat(taxRate) / 100;
+
+    const totalRevenue = sp * us;
+    const totalCostOfGoods = cpu * us;
+    const grossProfit = totalRevenue - totalCostOfGoods;
+    const royaltyAmount = totalRevenue * rr;
+    const platformCommissionAmount = totalRevenue * pcr;
+    // totalExpenses est le total de toutes les sorties d'argent, y compris le coût des marchandises
+    const totalExpenses = totalCostOfGoods + royaltyAmount + platformCommissionAmount + mc + ac;
+
+    // Bénéfice net avant impôt est le revenu moins toutes les dépenses (y compris coût des marchandises)
+    const netProfitBeforeTax = totalRevenue - totalExpenses;
+
+    const taxAmount = netProfitBeforeTax > 0 ? netProfitBeforeTax * tr : 0;
+    const netProfitAfterTax = netProfitBeforeTax - taxAmount;
+    const netProfitMargin = totalRevenue > 0 ? (netProfitAfterTax / totalRevenue) * 100 : 0;
+
+    setProfitabilityResults({
+      totalRevenue,
+      totalCostOfGoods,
+      grossProfit,
+      royaltyAmount,
+      platformCommissionAmount,
+      totalExpenses,
+      netProfitBeforeTax,
+      taxAmount,
+      netProfitAfterTax,
+      netProfitMargin,
+      marketingCost, // Pour les graphiques
+      adminCost,     // Pour les graphiques
+    });
+    setShowProfitabilityResults(true);
+  }, [sellingPrice, costPerUnit, unitsSold, royaltyRate, platformCommission, marketingCost, adminCost, taxRate]);
+
+  // Recalcul des résultats de rentabilité chaque fois que les inputs changent
+  useEffect(() => {
+    calculateProfitability();
+  }, [calculateProfitability, sellingPrice, costPerUnit, unitsSold, royaltyRate, platformCommission, marketingCost, adminCost, taxRate]);
+
+
+  // Données pour les graphiques de rentabilité individuelle utilisant Recharts
+  const pieChartDataProfitability = profitabilityResults ? [
+    { name: 'Revenu Total', value: profitabilityResults.totalRevenue },
+    { name: 'Coût des Marchandises', value: profitabilityResults.totalCostOfGoods },
+    { name: 'Redevances', value: profitabilityResults.royaltyAmount },
+    { name: 'Commission', value: profitabilityResults.platformCommissionAmount },
+    { name: 'Marketing', value: profitabilityResults.marketingCost },
+    { name: 'Admin', value: profitabilityResults.adminCost },
+    { name: 'Impôt', value: profitabilityResults.taxAmount },
+    { name: 'Profit Net', value: profitabilityResults.netProfitAfterTax },
+  ].filter(item => item.value > 0 || item.name === 'Profit Net') : []; // Garder le profit net même s'il est négatif ou zéro
+
+  const barChartDataProfitability = profitabilityResults ? [
+    { name: 'Revenu Total', value: profitabilityResults.totalRevenue },
+    { name: 'Dépenses Totales', value: profitabilityResults.totalExpenses },
+    { name: 'Profit Avant Impôt', value: profitabilityResults.netProfitBeforeTax },
+    { name: 'Impôt', value: profitabilityResults.taxAmount },
+    { name: 'Profit Net', value: profitabilityResults.netProfitAfterTax },
+  ].filter(item => item.value !== null) : [];
+
+  // Graphique en anneau simplifié : répartition des coûts Marketing et Admin
+  const doughnutChartDataProfitability = profitabilityResults && (profitabilityResults.marketingCost > 0 || profitabilityResults.adminCost > 0) ? [
+    { name: 'Coûts de Marketing', value: profitabilityResults.marketingCost },
+    { name: 'Coûts Administratifs', value: profitabilityResults.adminCost },
+  ].filter(item => item.value > 0) : [];
+
+
+  const clearForm = () => {
+    setSellingPrice(0);
+    setCostPerUnit(0);
+    setUnitsSold(0);
+    setRoyaltyRate(0);
+    setPlatformCommission(0);
+    setMarketingCost(0);
+    setAdminCost(0);
+    setTaxRate(0);
+    setProfitabilityResults(null);
+    setShowProfitabilityResults(false);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+
+  return (
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4 sm:p-6 lg:p-8 font-inter rounded-lg shadow-lg">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl sm:text-4xl font-bold text-center mb-6 text-gray-800 dark:text-gray-50">
+          💰 Outil Financier Complet OliPLUS
+        </h1>
+        <p className="text-center text-lg sm:text-xl mb-8 text-gray-600 dark:text-gray-300">
+          Analysez la rentabilité par livre et projetez le chiffre d'affaires de votre catalogue.
+        </p>
+
+        {/* Section de projection globale */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-12">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-50 flex items-center">
+            <span role="img" aria-label="Globe" className="mr-2">🌐</span> Projection du Chiffre d'Affaires du Catalogue (39 titres sur 3 ans) - Projections 2025
+          </h2>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <span className="text-gray-700 dark:text-gray-200 text-lg font-semibold">Taux de change (EUR vers CAD):</span>
+              <input
+                type="number"
+                step="0.001"
+                value={exchangeRate}
+                onChange={(e) => setExchangeRate(parseFloat(e.target.value))}
+                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 w-24"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setCurrency('EUR')}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                  currency === 'EUR' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-blue-500 hover:text-white'
+                }`}
+              >
+                € EUR
+              </button>
+              <button
+                onClick={() => setCurrency('CAD')}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                  currency === 'CAD' ? 'bg-green-600 text-white shadow-lg' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-green-500 hover:text-white'
+                }`}
+              >
+                $ CAD
+              </button>
+            </div>
+          </div>
+          <div className="text-center text-3xl font-bold text-blue-700 dark:text-blue-300 mb-6">
+            Total Net Estimé Catalogue: {formatCurrency(currentNetTotalGlobal)}
+          </div>
+
+          <div className="overflow-x-auto mb-6">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider rounded-tl-lg">Format</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Prix Moyen</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ventes Estimées (Total)</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">CA Brut Estimé</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider rounded-tr-lg">CA Net (Après -30%)</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {simulationData.map((row, index) => (
+                  <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{row.format}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                      {formatCurrency(row.pricePerUnit)} {row.isPack ? '/ pack' : ''}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                      {row.isPack ? row.salesPerBook : row.salesPerBook * row.totalBooks} {row.isPack ? 'packs' : 'unités'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                      {formatCurrency(row.estimatedGrossEUR)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-green-400 font-bold">
+                      {formatCurrency(row.estimatedNetEUR)}
+                    </td>
+                  </tr>
+                ))}
+                {/* Ligne Totale */}
+                <tr className="bg-gray-100 dark:bg-gray-700 font-semibold">
+                  <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900 dark:text-gray-100">Total estimé</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900 dark:text-gray-100"></td>
+                  <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900 dark:text-gray-100"></td>
+                  <td className="px-6 py-4 whitespace-nowrap text-base text-gray-900 dark:text-gray-100">
+                    {formatCurrency(totalGrossEstimatedEUR)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-base text-green-700 dark:text-green-300">
+                    {formatCurrency(totalNetEstimatedEUR)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-50 text-center">
+            Répartition du Chiffre d'Affaires Net par Format (Catalogue)
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={chartDataGlobal}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" className="dark:stroke-[#444]" />
+              <XAxis dataKey="name" tick={{ fill: 'currentColor' }} />
+              <YAxis
+                tickFormatter={(value) => formatCurrency(value, 0)}
+                tick={{ fill: 'currentColor' }}
+              />
+              <Tooltip formatter={(value) => formatCurrency(value)} />
+              <Legend />
+              <Bar dataKey="Chiffre d'affaires net" fill="#4CAF50" radius={[10, 10, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+
+          <div className="text-center mt-8">
+            <h3 className="text-xl font-bold text-blue-700 dark:text-blue-300 mb-2">
+              🎯 Chiffre d’affaires net potentiel sur 3 ans ≈{' '}
+              {formatCurrency(currentNetTotalGlobal, 0)}
+            </h3>
+            <p className="text-gray-700 dark:text-gray-200 text-lg">
+              Ce qui revient à environ{' '}
+              {formatCurrency(currentNetTotalGlobal / 39, 0)} par livre en moyenne.
+            </p>
+          </div>
+        </div>
+
+
+        {/* Section du calculateur de rentabilité de livre individuel */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+          <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-50 flex items-center">
+            <span role="img" aria-label="Calculator" className="mr-2">🧮</span> Calculateur de Rentabilité par Livre Individuel (en CAD)
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mb-6">
+            <div className="input-group">
+              <label htmlFor="selling-price" className="block text-gray-700 dark:text-gray-200 font-bold mb-1">Prix de vente par livre (CAD):</label>
+              <input
+                type="number" id="selling-price" className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} step="0.01" required
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="cost-per-unit" className="block text-gray-700 dark:text-gray-200 font-bold mb-1">Coût par livre (impression, etc.) (CAD):</label>
+              <input
+                type="number" id="cost-per-unit" className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                value={costPerUnit} onChange={(e) => setCostPerUnit(e.target.value)} step="0.01" required
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="units-sold" className="block text-gray-700 dark:text-gray-200 font-bold mb-1">Nombre d'exemplaires vendus:</label>
+              <input
+                type="number" id="units-sold" className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                value={unitsSold} onChange={(e) => setUnitsSold(e.target.value)} required
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="royalty-rate" className="block text-gray-700 dark:text-gray-200 font-bold mb-1">Taux de redevance à l'auteur (%):</label>
+              <input
+                type="number" id="royalty-rate" className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                value={royaltyRate} onChange={(e) => setRoyaltyRate(e.target.value)} step="0.01" min="0" max="100"
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="platform-commission" className="block text-gray-700 dark:text-gray-200 font-bold mb-1">Commission de la plateforme de vente (%):</label>
+              <input
+                type="number" id="platform-commission" className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                value={platformCommission} onChange={(e) => setPlatformCommission(e.target.value)} step="0.01" min="0" max="100"
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="marketing-cost" className="block text-gray-700 dark:text-gray-200 font-bold mb-1">Coûts de marketing (CAD):</label>
+              <input
+                type="number" id="marketing-cost" className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                value={marketingCost} onChange={(e) => setMarketingCost(e.target.value)} step="0.01"
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="admin-cost" className="block text-gray-700 dark:text-gray-200 font-bold mb-1">Coûts administratifs (CAD):</label>
+              <input
+                type="number" id="admin-cost" className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                value={adminCost} onChange={(e) => setAdminCost(e.target.value)} step="0.01"
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="tax-rate" className="block text-gray-700 dark:text-gray-200 font-bold mb-1">Taux d'imposition (%):</label>
+              <input
+                type="number" id="tax-rate" className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                value={taxRate} onChange={(e) => setTaxRate(e.target.value)} step="0.01" min="0" max="100"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-center gap-4 mt-6">
+            <button
+              onClick={calculateProfitability}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"
+            >
+              Calculer la rentabilité
+            </button>
+            <button
+              onClick={clearForm}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"
+            >
+              Effacer le formulaire
+            </button>
+            <button
+              onClick={handlePrint}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"
+            >
+              Imprimer les résultats
+            </button>
+          </div>
+
+          {showProfitabilityResults && profitabilityResults && (
+            <div className="results-container mt-8 p-6 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 shadow-inner">
+              <h3 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-50 text-center">
+                Résultats Financiers (CAD)
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-lg">
+                <p><strong>Revenu total:</strong> <span className="text-blue-600 dark:text-blue-400">{profitabilityResults.totalRevenue.toFixed(2)} CAD</span></p>
+                <p><strong>Coût total des marchandises vendues:</strong> <span className="text-red-600 dark:text-red-400">{profitabilityResults.totalCostOfGoods.toFixed(2)} CAD</span></p>
+                <p><strong>Bénéfice brut:</strong> <span className="text-green-600 dark:text-green-400">{profitabilityResults.grossProfit.toFixed(2)} CAD</span></p>
+                <p><strong>Redevances à l'auteur :</strong> <span className="text-red-600 dark:text-red-400">{profitabilityResults.royaltyAmount.toFixed(2)} CAD</span></p>
+                <p><strong>Commission de la plateforme de vente :</strong> <span className="text-red-600 dark:text-red-400">{profitabilityResults.platformCommissionAmount.toFixed(2)} CAD</span></p>
+                <p><strong>Coûts de marketing :</strong> <span className="text-red-600 dark:text-red-400">{profitabilityResults.marketingCost.toFixed(2)} CAD</span></p>
+                <p><strong>Coûts administratifs :</strong> <span className="text-red-600 dark:text-red-400">{profitabilityResults.adminCost.toFixed(2)} CAD</span></p>
+                <p><strong>Total des dépenses :</strong> <span className="text-red-700 dark:text-red-300 font-bold">{profitabilityResults.totalExpenses.toFixed(2)} CAD</span></p>
+                <p><strong>Bénéfice net avant impôt :</strong> <span className="text-purple-600 dark:text-purple-400">{profitabilityResults.netProfitBeforeTax.toFixed(2)} CAD</span></p>
+                <p><strong>Impôt :</strong> <span className="text-red-600 dark:text-red-400">{profitabilityResults.taxAmount.toFixed(2)} CAD</span></p>
+                <p className="col-span-full text-center text-2xl font-bold mt-4">
+                  <strong>Bénéfice net après impôt:</strong> <span className="text-green-700 dark:text-green-300">{profitabilityResults.netProfitAfterTax.toFixed(2)} CAD</span>
+                </p>
+                <p className="col-span-full text-center text-lg">
+                  <strong>Marge de profit nette :</strong> <span className="text-green-700 dark:text-green-300">{profitabilityResults.netProfitMargin.toFixed(2)} %</span>
+                </p>
+              </div>
+
+              <div className="charts-container mt-8 flex flex-wrap justify-around gap-6">
+                <div className="chart-box bg-white dark:bg-gray-900 p-4 rounded-lg shadow-md flex-1 min-w-[300px] max-w-[calc(50%-12px)]">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-50 text-center mb-4">Répartition Globale</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={pieChartDataProfitability}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%" cy="50%"
+                        outerRadius={80}
+                        fill="#8884d8"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      >
+                        {pieChartDataProfitability.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => value.toFixed(2) + ' CAD'} />
+                      <Legend wrapperStyle={{ fontSize: '12px' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="chart-box bg-white dark:bg-gray-900 p-4 rounded-lg shadow-md flex-1 min-w-[300px] max-w-[calc(50%-12px)]">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-50 text-center mb-4">Comparaison en Valeurs Absolues</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={barChartDataProfitability} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" className="dark:stroke-[#444]" />
+                      <XAxis dataKey="name" tick={{ fill: 'currentColor' }} />
+                      <YAxis tickFormatter={(value) => value.toFixed(0) + ' CAD'} tick={{ fill: 'currentColor' }} />
+                      <Tooltip formatter={(value) => value.toFixed(2) + ' CAD'} />
+                      <Bar dataKey="value" fill="#2196F3" radius={[5, 5, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Nouveau Doughnut Chart pour Marketing/Admin Costs simplifié */}
+                {(doughnutChartDataProfitability.length > 0) && (
+                <div className="chart-box bg-white dark:bg-gray-900 p-4 rounded-lg shadow-md flex-1 min-w-[300px] max-w-[calc(50%-12px)]">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-50 text-center mb-4">Répartition Coûts Marketing vs Admin</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={doughnutChartDataProfitability}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%" cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      >
+                        {doughnutChartDataProfitability.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => value.toFixed(2) + ' CAD'} />
+                      <Legend wrapperStyle={{ fontSize: '12px' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;

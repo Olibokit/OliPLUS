@@ -1,0 +1,47 @@
+<component name="cockpit.test.bindings">
+
+  <!-- 📦 Dépendances requises pour les tests cockpit -->
+  <require>org.nuxeo.ecm.platform.userworkspace.core</require>
+  <require>org.nuxeo.ecm.platform.audit</require>
+  <require>org.nuxeo.ecm.webengine.core</require>
+  <require>org.nuxeo.ecm.directory</require>
+
+  <!-- 🧪 REST endpoints cockpit test -->
+  <extension target="org.nuxeo.ecm.webengine.model.WebEngineModule" point="resources">
+    <resource name="cockpitTestBindings" class="org.nuxeo.cockpit.rest.binding.CockpitTestBinding">
+      <param name="path">/cockpit/test/bindings</param>
+    </resource>
+    <resource name="auditTest" class="org.nuxeo.cockpit.rest.binding.AuditTestBinding">
+      <param name="path">/cockpit/test/audit</param>
+    </resource>
+  </extension>
+
+  <!-- 🛡️ Directories de test utilisateurs & groupes cockpit -->
+  <extension target="org.nuxeo.ecm.directory.DirectoryService" point="directories">
+    <directory name="testUsers" extends="userDirectory">
+      <schema>user</schema>
+      <types>user</types>
+    </directory>
+    <directory name="testGroups" extends="groupDirectory">
+      <schema>group</schema>
+      <types>group</types>
+    </directory>
+  </extension>
+
+  <!-- 📋 Audit stream cockpit étendu -->
+  <extension target="org.nuxeo.ecm.platform.audit.service" point="auditStream">
+    <auditStream name="testAudit">
+      <event name="documentCreated"/>
+      <event name="documentUpdated"/>
+      <event name="documentRemoved"/>
+      <event name="loginTest"/>
+    </auditStream>
+  </extension>
+
+  <!-- ⚙️ Paramètres de configuration cockpit test -->
+  <extension target="org.nuxeo.ecm.core.api.configuration.ConfigurationService" point="configuration">
+    <property name="cockpit.test.mode">true</property>
+    <property name="cockpit.test.audit.enabled">true</property>
+  </extension>
+
+</component>

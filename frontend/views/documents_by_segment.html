@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>OliPLUS — Documents par segment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- Tailwind pour typage visuel -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Style cockpit typé -->
+  <link rel="stylesheet" href="data/structure.css" />
+</head>
+<body class="bg-gray-100 font-sans p-6">
+
+  <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">
+    📘 Documents liés à ce segment
+  </h1>
+
+  <!-- Filtres cockpit -->
+  <div class="flex flex-wrap gap-4 mb-6 justify-center items-center">
+    <input type="text" id="auteurFilter" placeholder="Auteur / éditeur" class="p-2 border rounded w-64" />
+    <select id="statutFilter" class="p-2 border rounded">
+      <option value="">⏷ Statut</option>
+      <option value="brouillon">Brouillon</option>
+      <option value="en_revision">En révision</option>
+      <option value="valide">Validé</option>
+      <option value="diffuse">Diffusé</option>
+      <option value="archive">Archivé</option>
+      <option value="obsolete">Obsolète</option>
+    </select>
+    <input type="number" id="scoreFilter" min="0" max="100" step="1" placeholder="Score min." class="p-2 border rounded w-32" />
+    <input type="date" id="dateMinFilter" class="p-2 border rounded" />
+    <button onclick="applyFilters()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+      🔎 Filtrer
+    </button>
+  </div>
+
+  <!-- Zone d'injection des documents -->
+  <div id="documentContainer" class="space-y-4 max-w-4xl mx-auto"></div>
+
+  <!-- JS cockpit -->
+  <script src="data/documentsViewer.js"></script>
+</body>
+</html>

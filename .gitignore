@@ -1,0 +1,123 @@
+# ══════════════════════════════════════════════════════════════════
+# 🛠️ .gitignore — Projet OliPLUS cockpit
+# Usage : exclure les fichiers sensibles, temporaires ou non versionnés
+# Mise à jour cockpit : 2025-08
+# ══════════════════════════════════════════════════════════════════
+
+# === 🧠 Python / FastAPI / Streamlit ===
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.spec
+*.zip
+*.exe
+*.bak
+*.tmp
+*.out
+*.log
+*.log.*
+*.tmp.*
+*.orig
+*.rej
+*.sqlite3
+*.db
+db.sqlite3
+MANIFEST
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.cache/
+.tox/
+*.ipynb
+.ipynb_checkpoints/
+tests/__snapshots__/
+migrations/
+**/migrations/*.py
+**/migrations/*.pyc
+
+# === 🔐 Secrets & configuration ===
+.env
+.env.*
+*.env.bak
+*.secrets.json
+*.key
+*.pem
+*.sock
+*.pid
+settings.local.py
+local_settings.py
+config.*.yaml
+cockpit_status.json
+
+# === 📦 Environnements virtuels ===
+.venv/
+venv/
+
+# === 📊 Logs, artefacts, bases temporaires ===
+logs/
+*.dump
+*.pkl
+*.cache
+
+# === 🧪 Tests & coverage ===
+tests/__snapshots__/
+test-results/
+nosetests.xml
+
+# === 🏗️ Build / distribution ===
+build/
+dist/
+
+# === 🌐 Frontend (React / Next.js / Vue / Streamlit) ===
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+frontend/**/dist/
+frontend/**/.next/
+frontend/**/.vite/
+frontend/**/.eslintcache
+frontend/**/__snapshots__/
+
+# === 🐳 Docker / Celery ===
+celerybeat-schedule
+__celery_lockfile__
+docker-compose.override.yml
+
+# === 🛠️ IDE / OS / système ===
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.Trash-*
+.fseventsd/
+.Spotlight-V100
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# === 📁 Dossiers à ignorer cockpitifiés ===
+à_trier/
+staticfiles/
+media/
+
+# === 🚫 Config cockpit (on versionne uniquement les fichiers validés) ===
+config/
+!config/paths.yaml
+!config/db_config.yaml
+!config/antivirus.yaml
+!config/logging_config.json
+
+# === 📄 Fichiers cockpit à inclure explicitement ===
+!LICENSE
+!COPYRIGHT
+!TRADEMARK
+!pyproject.toml
+!requirements*.txt
+!README.md

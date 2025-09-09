@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cockpit de Projet Éditorial IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #333;
+            line-height: 1.6;
+            transition: all 0.3s ease-in-out;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 24px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+        h1, h2 {
+            font-weight: 700;
+            color: #1e40af;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+        .card {
+            background-color: #f0f4f8;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .task-list {
+            list-style: none;
+            padding: 0;
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .task-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+        .task-text {
+            flex-grow: 1;
+        }
+        .task-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6b7280;
+            font-size: 1.2rem;
+            transition: color 0.2s;
+        }
+        .task-actions button:hover {
+            color: #1e40af;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-to-do { background-color: #fca5a5; color: #7f1d1d; }
+        .status-in-progress { background-color: #fde68a; color: #92400e; }
+        .status-done { background-color: #a7f3d0; color: #065f46; }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e5e7eb;
+            border-radius: 9999px;
+            height: 16px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #10b981;
+            transition: width 0.5s ease-in-out;
+        }
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: white;
+            padding: 32px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+        }
+        .gemini-synopsis-result {
+            margin-top: 16px;
+            padding: 16px;
+            background-color: #e5f5ff;
+            border: 1px solid #99c2ff;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="container mx-auto">
+        <h1 class="text-3xl text-center mb-8">Cockpit de Projet Éditorial IA</h1>
+
+        <!-- Projet: Quand les fantômes me réveillent... -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800">Projet: Quand les fantômes me réveillent...</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Fiche de suivi -->
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-indigo-700">Fiche de Suivi</h3>
+                    <p><strong>Auteurs :</strong> Marie-Hélène Jarry (Texte), Isabelle Langevin (Illustrations)</p>
+                    <p><strong>Éditeur :</strong> Olibokit</p>
+                    <p><strong>Date de réédition :</strong> 2025</p>
+                    <p><strong>Public cible :</strong> 3 à 8 ans</p>
+                    <p><strong>ISBN :</strong></p>
+                    <ul class="list-disc list-inside ml-4">
+                        <li>Imprimé: 978-2-925536-36-9</li>
+                        <li>PDF: 978-2-925536-37-6</li>
+                        <li>ePUB: 978-2-925536-38-3</li>
+                        <li>Kindle: 978-2-925536-39-0</li>
+                    </ul>
+                </div>
+
+                <!-- Synopsis généré par IA -->
+                <div class="card p-6 col-span-1 lg:col-span-2">
+                    <h3 class="text-xl font-semibold mb-4 text-indigo-700">Synopsis généré par IA</h3>
+                    <div id="synopsisResultDiv" class="gemini-synopsis-result">
+                        <p id="synopsisContentP" class="text-gray-700">
+                           Quand la nuit s’installe et que des ombres dansent sur les murs, des petits bruits mystérieux se font entendre sous le lit... Qui de mieux que maman pour rassurer et apaiser les frissons ? Et si ces fantômes cachaient en réalité d’incroyables secrets ? Avec humour et douceur, cette histoire transforme les peurs nocturnes en éclats de rire et montre que la nuit peut être un terrain de jeu plein de surprises. ✨ Un album enchanteur, parfait pour les jeunes lecteurs qui veulent apprivoiser l’obscurité et en découvrir toute la magie !
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tâches du projet -->
+            <div class="card p-6 mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-indigo-700">Liste des Tâches</h3>
+                <div class="progress-bar-container mb-4">
+                    <div id="projectProgressBar" class="progress-bar-fill w-[40%] bg-blue-500"></div>
+                </div>
+                <ul id="projectTaskList" class="task-list">
+                    <li class="task-item">
+                        <div class="task-text">Valider les corrections orthographiques du texte.</div>
+                        <div class="flex items-center space-x-2">
+                            <span class="status-badge status-done">Terminé</span>
+                        </div>
+                    </li>
+                    <li class="task-item">
+                        <div class="task-text">Finaliser le design de la couverture.</div>
+                        <div class="flex items-center space-x-2">
+                            <span class="status-badge status-in-progress">En cours</span>
+                        </div>
+                    </li>
+                    <li class="task-item">
+                        <div class="task-text">Obtenir les ISBN.</div>
+                        <div class="flex items-center space-x-2">
+                            <span class="status-badge status-in-progress">En cours</span>
+                        </div>
+                    </li>
+                    <li class="task-item">
+                        <div class="task-text">Planifier la campagne de lancement.</div>
+                        <div class="flex items-center space-x-2">
+                            <span class="status-badge status-to-do">À faire</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section "Cockpit de projet IA" -->
+        <h2 class="text-2xl font-bold text-gray-800">Générer un synopsis avec Gemini</h2>
+        <div class="card p-6 mb-8">
+            <h3 class="text-xl font-semibold mb-4 text-indigo-700">Générer un Synopsis par IA</h3>
+            <textarea id="bookTitleInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4" rows="1" placeholder="Titre du livre"></textarea>
+            <textarea id="bookSummaryInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4" rows="4" placeholder="Résumé du livre"></textarea>
+            <div class="flex justify-end">
+                <button id="generateSynopsisButton" class="px-6 py-3 bg-indigo-600 text-white rounded-md font-bold hover:bg-indigo-700 transition-colors">
+                    Générer un synopsis par IA
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modals -->
+    <div id="loadingModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="modal-overlay absolute inset-0 bg-gray-900 opacity-50"></div>
+        <div class="modal-content transform -translate-y-4 transition-transform z-10 p-8 text-center rounded-lg shadow-lg">
+            <div class="flex justify-center items-center">
+                <i class="fas fa-spinner fa-spin text-4xl text-white"></i>
+            </div>
+            <p class="mt-4 text-white font-semibold">Génération en cours...</p>
+        </div>
+    </div>
+    
+</body>
+</html>

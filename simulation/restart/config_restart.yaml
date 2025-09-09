@@ -1,0 +1,5 @@
+restart:
+  enabled: true
+  path: "./restart/"
+  name: "montdg_restart"
+  log_file: "log_restart.txt"

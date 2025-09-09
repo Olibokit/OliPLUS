@@ -1,0 +1,19 @@
+# Dockerfile.dev
+FROM python:3.10-slim
+
+WORKDIR /workspace
+
+RUN apt-get update && apt-get install -y curl build-essential
+
+# Install Poetry
+RUN curl -sSL https://install.python-poetry.org | python3 -
+ENV PATH="/root/.local/bin:$PATH"
+
+# Copy everything
+COPY . .
+
+# Install full dev environment
+RUN poetry install --with dev --extras "core full-backend full-ai full-dev"
+
+# Default shell
+CMD ["/bin/bash"]

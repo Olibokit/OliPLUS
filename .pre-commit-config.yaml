@@ -1,0 +1,50 @@
+# ✅ .pre-commit-config.yaml — cockpit OliPLUS
+# 🔐 Sécurisation typée des commits : formatage, linting, audit, YAML, sécurité
+
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.3.0
+    hooks:
+      - id: black
+        name: 🧼 Formatage typé avec Black
+        language_version: python3.12
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.1.0
+    hooks:
+      - id: flake8
+        name: 🧠 Linting cockpitifié avec Flake8
+        additional_dependencies: [flake8-bugbear]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        name: 🔍 Vérification typée avec Mypy
+        args: ["--ignore-missing-imports"]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-yaml
+        name: 📄 Validation cockpitifiée des fichiers YAML
+      - id: end-of-file-fixer
+        name: 🧩 Correction des fins de fichier
+      - id: trailing-whitespace
+        name: 🧼 Suppression des espaces inutiles
+
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: no-commit-to-branch
+        name: 🚫 Protection cockpit contre les commits sur main
+        args: ["--branch", "main"]
+
+  - repo: https://github.com/secure/secure-pre-commit
+    rev: v0.1.0
+    hooks:
+      - id: bandit
+        name: 🔐 Audit sécurité cockpitifié avec Bandit
+
+default_language_version:
+  python: python3.12

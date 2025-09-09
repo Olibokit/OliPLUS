@@ -1,0 +1,170 @@
+version: '3.8'
+
+services:
+  # 🧠 PostgreSQL Database
+  db:
+    image: postgres:15
+    container_name: cockpit-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cockpit-net
+    labels:
+      cockpit.role: "database"
+
+  # ⚡ Redis Cache
+  redis:
+    image: redis:7
+    container_name: cockpit-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cockpit-net
+    labels:
+      cockpit.role: "cache"
+
+  # 🔗 FastAPI Backend
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.api
+      args:
+        ENVIRONMENT: ${ENVIRONMENT}
+    container_name: cockpit-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379/0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cockpit-net
+    labels:
+      cockpit.role: "api"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # 🧪 Celery Workers
+  workers:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.workers
+    container_name: cockpit-workers
+    command: ["celery", "-A", "cockpit_core.tasks", "worker", "--loglevel=INFO"]
+    depends_on:
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cockpit-net
+    labels:
+      cockpit.role: "worker"
+
+  # 📊 Flower Monitoring
+  flower:
+    image: mher/flower
+    container_name: cockpit-flower
+    ports:
+      - "5555:5555"
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - cockpit-net
+    labels:
+      cockpit.role: "monitoring"
+
+  # 🖥️ Streamlit UI
+  cockpit:
+    build:
+      context: ./frontend/streamlit_app
+      dockerfile: Dockerfile.streamlit
+    container_name: cockpit-ui
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./frontend/streamlit_app:/app
+    depends_on:
+      api:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - cockpit-net
+    labels:
+      cockpit.role: "frontend"
+
+  # 🌐 NGINX Proxy
+  nginx:
+    image: nginx:stable
+    container_name: cockpit-nginx
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    volumes:
+      - ./infra/nginx/conf:/etc/nginx/conf.d:ro
+      - ./infra/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - cockpit-net
+    labels:
+      cockpit.role: "proxy"
+
+  # 🛠️ PGAdmin Interface
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: cockpit-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@oliplus.local
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cockpit-net
+    labels:
+      cockpit.role: "admin"
+
+volumes:
+  pgdata:
+
+networks:
+  cockpit-net:
+    driver: bridge

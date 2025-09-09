@@ -1,0 +1,824 @@
+timeout /t 2 >nul
+start "" "dashboard\oliplus-dashboard-dynamic.html"
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oliplus Cockpit</title>
+
+  <!-- 🎨 Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 🌀 Config Tailwind -->
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          inter: ['Inter', 'sans-serif']
+        },
+        colors: {
+          cockpit: {
+            bg: '#1e293b',
+            panel: '#334155',
+            border: '#475569',
+            text: '#e2e8f0'
+          }
+        }
+      }
+    }
+  };
+</script>10222222222222222
+
+  <!-- 📚 Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <!-- 🧩 FontAwesome -->
+  <!-- Option 1 : Kit personnel (remplacer YOUR_KIT_ID) -->
+  <!-- <script src="https://kit.fontawesome.com/YOUR_KIT_ID.js" crossorigin="anonymous"></script> -->
+
+  <!-- Option 2 : CDN direct (recommandé pour dev ou version autonome) -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+  <!-- 📊 Librairies graphiques (Chart.js + jsPDF) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+  <script src="injectCockpit.js"></script>
+</head>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0f172a;
+    }
+    .tab-button.active {
+      background-color: #334155;
+    }
+    .progress-bar-container {
+      background-color: #1e293b;
+      height: 6px;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 6px;
+      transition: width 0.3s ease-in-out;
+    }
+  </style>
+</head>
+<body class="text-cockpit-text bg-cockpit-bg p-6">
+
+  <!-- 🎯 Statistiques globales -->
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-cockpit-panel p-6 rounded-lg shadow-md">
+      <h2 class="text-lg font-semibold text-gray-300">Progression Roadmap</h2>
+      <p id="roadmap-progress-stat" class="text-3xl font-bold text-indigo-300 mt-2">–</p>
+    </div>
+    <div class="bg-cockpit-panel p-6 rounded-lg shadow-md">
+      <h2 class="text-lg font-semibold text-gray-300">Fichiers Audités</h2>
+      <p id="audited-files-stat" class="text-3xl font-bold text-green-300 mt-2">–</p>
+    </div>
+    <div class="bg-cockpit-panel p-6 rounded-lg shadow-md">
+      <h2 class="text-lg font-semibold text-gray-300">Anomalies Détectées</h2>
+      <p id="anomalies-stat" class="text-3xl font-bold text-red-300 mt-2">–</p>
+    </div>
+    <div class="bg-cockpit-panel p-6 rounded-lg shadow-md">
+      <h2 class="text-lg font-semibold text-gray-300">Tâches en cours</h2>
+      <p id="tasks-in-progress-stat" class="text-3xl font-bold text-yellow-300 mt-2">–</p>
+    </div>
+  </section>
+
+  <!-- 🔁 Rafraîchissement + Audit -->
+  <div class="fixed bottom-6 left-6 z-40 space-y-2">
+    <button onclick="refreshDashboard()" class="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold px-4 py-2 rounded shadow-md transition">
+      🔁 Rafraîchir les données
+    </button>
+
+    <button class="tab-button relative bg-slate-800 hover:bg-slate-700 text-white font-semibold px-4 py-2 rounded shadow-md transition" data-tab-target="audit-structure">
+      🛡️ Audit structure
+      <span id="audit-alert-count" class="absolute -top-1 -right-3 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full hidden">0</span>
+    </button>
+	<button onclick="loadDashboard(payloadData)" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow-md">
+  🚀 Lancer le Scan Cockpit
+</button>
+  </div>
+// 🗺️ Feuille de route
+function populateRoadmapTable(roadmapData) {
+  const tbody = document.getElementById("roadmap-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  roadmapData.forEach(item => {
+    const row = document.createElement("tr");
+    row.className = "hover:bg-gray-700";
+
+    const progressBarColor =
+      item.status === "Complete"
+        ? "bg-green-500"
+        : item.status === "En cours"
+        ? "bg-yellow-500"
+        : "bg-blue-500";
+
+    row.innerHTML = `
+      <td class="px-6 py-4 text-sm font-medium text-gray-100">${item.phase || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill ${progressBarColor}" style="width: ${item.progress || 0}%"></div>
+        </div>
+        <span class="ml-2">${item.progress || 0}%</span>
+      </td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.status || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.description || "—"}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// 🧱 Structure du projet
+function populateProjectStructureTable(data) {
+  const tbody = document.getElementById("project-structure-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  data.forEach(item => {
+    const row = document.createElement("tr");
+    row.className = "hover:bg-gray-700";
+
+    row.innerHTML = `
+      <td class="px-6 py-4 text-sm font-medium text-gray-100">${item.id || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.name || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.status || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.path || "—"}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// ✅ Checklist de validation
+function populateValidationChecklistTable(data) {
+  const tbody = document.getElementById("validation-checklist-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  data.forEach(item => {
+    const row = document.createElement("tr");
+    row.className = "hover:bg-gray-700";
+    row.innerHTML = `
+      <td class="px-6 py-4 text-sm font-medium text-gray-100">${item.name || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.status || "—"}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// ⚠️ Zones d’audit à approfondir
+function populateGreyAreasList(data) {
+  const ul = document.getElementById("grey-areas-list");
+  if (!ul) return;
+  ul.innerHTML = "";
+
+  data.forEach(item => {
+    const li = document.createElement("li");
+    li.className = "mb-2 text-gray-300";
+    li.innerHTML = `
+      <span class="font-semibold text-red-300">${item.name || "—"}</span> : ${item.reason || "—"}
+    `;
+    ul.appendChild(li);
+  });
+}
+
+  // 🎯 Mise à jour du badge d’alerte
+  const badge = document.getElementById("audit-alert-count");
+  if (badge) {
+    const nb = payloadData.audit_issues.length;
+    if (nb > 0) {
+      badge.textContent = nb;
+      badge.classList.remove("hidden");
+    } else {
+      badge.classList.add("hidden");
+    }
+  }
+}
+</script>
+<!-- 📦 Chargement du payload -->
+<script src="payload.js"></script>
+
+<script>
+  function refreshDashboard() {
+    showToast("🔄 Mise à jour des données en cours…");
+    location.reload(); // simple et fiable
+  }
+
+  // 🧩 Appel principal dès que payload.js est chargé
+function updateGlobalStats(data) {
+  try {
+    const auditCount = data.audit_issues ? data.audit_issues.length : 0;
+    const todoCount = data.todo_inventory ? data.todo_inventory.length : 0;
+    const validFiles = data.cockpit_files
+      ? data.cockpit_files.filter(f => f.etat === "Valide").length
+      : 0;
+
+    document.getElementById("anomalies-stat").textContent = auditCount;
+    document.getElementById("tasks-in-progress-stat").textContent = todoCount;
+    document.getElementById("audited-files-stat").textContent = validFiles;
+  } catch (error) {
+    console.warn("updateGlobalStats a échoué :", error);
+  }
+}
+<script>
+  // ✅ Vérifie que les données ont bien été injectées
+  if (typeof payloadData !== 'undefined') {
+    console.log("✅ Données cockpit chargées :", payloadData);
+    loadDashboard(payloadData);
+  } else {
+    console.error("❌ Le fichier payload.js est manquant ou vide.");
+    document.body.innerHTML = "<div class='text-red-400 text-center p-6'>Erreur : les données du cockpit n'ont pas pu être chargées.</div>";
+  }
+
+  // 🧠 Fonction maître : injection des données dans le DOM
+  function loadDashboard(data) {
+    console.log("🧭 Initialisation Cockpit avec payload :", data);
+    updateGlobalStats(data);
+
+    // 📦 Injection dans les différentes sections (si fonctions présentes)
+    if (typeof populateRoadmapTable === 'function') populateRoadmapTable(data.roadmap || []);
+    if (typeof populateProjectStructureTable === 'function') populateProjectStructureTable(data.project_structure || []);
+    if (typeof populateValidationChecklistTable === 'function') populateValidationChecklistTable(data.validation_checklist || []);
+    if (typeof populateGreyAreasList === 'function') populateGreyAreasList(data.grey_areas || []);
+    if (typeof populateSoftwareFragmentsTable === 'function') populateSoftwareFragmentsTable(data.software_fragments || []);
+    if (typeof populateSoftwareFusionCatalogTable === 'function') populateSoftwareFusionCatalogTable(data.software_fusion_catalog || []);
+    if (typeof populateTodoInventoryTable === 'function') populateTodoInventoryTable(data.todo_inventory || []);
+    if (typeof populateCockpitFilesTable === 'function') populateCockpitFilesTable(data.cockpit_files || []);
+    if (typeof populateAuditIssuesList === 'function') populateAuditIssuesList();
+	if (typeof populateTodoInventoryTable === 'function') {
+  populateTodoInventoryTable(data.todo_inventory || []);
+}
+if (typeof populateCockpitFilesTable === 'function') {
+  populateCockpitFilesTable(data.cockpit_files || []);
+}
+
+    // 🔍 Graphiques (décommenter si les fonctions sont prêtes)
+    // if (typeof renderRoadmapProgressChart === 'function') renderRoadmapProgressChart(data.roadmap);
+    // if (typeof renderValidationChecklistChart === 'function') renderValidationChecklistChart(data.validation_checklist);
+    // if (typeof renderTodoInventoryChart === 'function') renderTodoInventoryChart(data.todo_inventory);
+  }
+
+  // 📊 Statistiques globales : injecte en haut de page
+  function updateGlobalStats(data) {
+    try {
+      const auditCount = data.audit_issues?.length || 0;
+      const todoCount = data.todo_inventory?.length || 0;
+      const validFiles = data.cockpit_files?.filter(f => f.etat === "Valide").length || 0;
+
+      document.getElementById("anomalies-stat").textContent = auditCount;
+      document.getElementById("tasks-in-progress-stat").textContent = todoCount;
+      document.getElementById("audited-files-stat").textContent = validFiles;
+    } catch (error) {
+      console.warn("⚠️ updateGlobalStats a échoué :", error);
+    }
+  }
+</script>
+function populateRoadmapTable(roadmapData) {
+  const tbody = document.getElementById("roadmap-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  roadmapData.forEach(item => {
+    const row = document.createElement("tr");
+    row.className = "hover:bg-gray-700";
+
+    const progressBarColor =
+      item.status === "Complete" ? "bg-green-500"
+      : item.status === "En cours" ? "bg-yellow-500"
+      : "bg-blue-500";
+
+    row.innerHTML = `
+      <td class="px-6 py-4 text-sm font-medium text-gray-100">${item.phase}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill ${progressBarColor}" style="width: ${item.progress || 0}%"></div>
+        </div>
+        <span class="ml-2">${item.progress || 0}%</span>
+      </td>
+      <td class="px-6 py-4 text-sm text-gray-300">
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+          item.status === "Complete"
+            ? "bg-green-100 text-green-800"
+            : item.status === "En cours"
+            ? "bg-yellow-100 text-yellow-800"
+            : "bg-gray-100 text-gray-800"
+        }">${item.status}</span>
+      </td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.description || "—"}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function populateProjectStructureTable(data) {
+  const tbody = document.getElementById("project-structure-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  data.forEach(item => {
+    const row = document.createElement("tr");
+    row.className = "hover:bg-gray-700";
+    row.innerHTML = `
+      <td class="px-6 py-4 text-sm font-medium text-gray-100">${item.id || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.name || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+          item.status === "Actif"
+            ? "bg-green-100 text-green-800"
+            : "bg-gray-100 text-gray-800"
+        }">${item.status || "—"}</span>
+      </td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.path || "—"}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function populateValidationChecklistTable(data) {
+  const tbody = document.getElementById("validation-checklist-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  data.forEach(item => {
+    const row = document.createElement("tr");
+    row.className = "hover:bg-gray-700";
+    row.innerHTML = `
+      <td class="px-6 py-4 text-sm font-medium text-gray-100">${item.name || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+          item.status === "Validé"
+            ? "bg-green-100 text-green-800"
+            : item.status === "Non Valide"
+            ? "bg-red-100 text-red-800"
+            : "bg-gray-100 text-gray-800"
+        }">${item.status || "—"}</span>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function populateGreyAreasList(data) {
+  const ul = document.getElementById("grey-areas-list");
+  if (!ul) return;
+  ul.innerHTML = "";
+
+  data.forEach(item => {
+    const li = document.createElement("li");
+    li.className = "mb-2";
+    li.innerHTML = `<span class="font-semibold text-red-300">${item.name || "—"} : ${item.reason || ""}</span>`;
+    ul.appendChild(li);
+  });
+}
+</script>
+function populateTodoInventoryTable(data) {
+  const tbody = document.getElementById("todo-inventory-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  data.forEach(item => {
+    const badgeClass = item.anomaly
+      ? "bg-red-100 text-red-800"
+      : item.badge === "Urgent"
+      ? "bg-red-100 text-red-800"
+      : item.badge === "Moyen"
+      ? "bg-yellow-100 text-yellow-800"
+      : "bg-gray-100 text-gray-800";
+
+    const row = document.createElement("tr");
+    row.className = "hover:bg-gray-700";
+    row.innerHTML = `
+      <td class="px-6 py-4 text-sm font-medium text-gray-100">${item.nom || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.type || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.statut || "—"}</td>
+      <td class="px-6 py-4 text-sm">
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${badgeClass}">
+          ${item.badge || "—"}
+        </span>
+      </td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item["chemin relatif"] || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.anomaly ? "Oui" : "Non"}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+function populateCockpitFilesTable(data) {
+  const tbody = document.getElementById("cockpit-files-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  data.forEach(item => {
+    const badgeClass =
+      item.etat === "Valide" || item.etat === "Actif"
+        ? "bg-green-100 text-green-800"
+        : item.etat === "Mis à jour" || item.etat === "En peuplement"
+        ? "bg-blue-100 text-blue-800"
+        : item.etat === "Sécurisé"
+        ? "bg-purple-100 text-purple-800"
+        : "bg-gray-100 text-gray-800";
+
+    const row = document.createElement("tr");
+    row.className = "hover:bg-gray-700";
+    row.innerHTML = `
+      <td class="px-6 py-4 text-sm font-medium text-gray-100">${item.nom || "—"}</td>
+      <td class="px-6 py-4 text-sm">
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${badgeClass}">
+          ${item.etat || "—"}
+        </span>
+      </td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.utilisation || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.commentaire || "—"}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+<script>
+function populateSoftwareFragmentsTable(data) {
+  const tbody = document.getElementById("software-fragments-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  data.forEach(item => {
+    const row = document.createElement("tr");
+    row.className = "hover:bg-gray-700";
+    row.innerHTML = `
+      <td class="px-6 py-4 text-sm font-medium text-gray-100">${item.name || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.type || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+          item.status === "Stable"
+            ? "bg-green-100 text-green-800"
+            : item.status === "En développement"
+            ? "bg-yellow-100 text-yellow-800"
+            : "bg-gray-100 text-gray-800"
+        }">${item.status || "—"}</span>
+      </td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.version || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item['last modified'] || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.path || "—"}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function populateSoftwareFusionCatalogTable(data) {
+  const tbody = document.getElementById("software-fusion-catalog-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  data.forEach(item => {
+    const row = document.createElement("tr");
+    row.className = "hover:bg-gray-700";
+    row.innerHTML = `
+      <td class="px-6 py-4 text-sm font-medium text-gray-100">${item.id || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.description || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.type || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+          item.status === "Exécutée"
+            ? "bg-green-100 text-green-800"
+            : item.status === "En cours"
+            ? "bg-yellow-100 text-yellow-800"
+            : "bg-gray-100 text-gray-800"
+        }">${item.status || "—"}</span>
+      </td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item["proposed date"] || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item["executed date"] || "—"}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function populateTodoInventoryTable(data) {
+  const tbody = document.getElementById("todo-inventory-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  data.forEach(item => {
+    const isAnomaly = item.anomaly || item.badge === "Anomalie";
+    const badgeClass = isAnomaly
+      ? "bg-red-100 text-red-800"
+      : ["Urgent", "Priorité Haute"].includes(item.badge)
+      ? "bg-red-100 text-red-800"
+      : item.badge === "Moyen"
+      ? "bg-yellow-100 text-yellow-800"
+      : "bg-gray-100 text-gray-800";
+
+    const row = document.createElement("tr");
+    row.className = "hover:bg-gray-700";
+    row.innerHTML = `
+      <td class="px-6 py-4 text-sm font-medium text-gray-100">${item.nom || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.type || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.statut || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${badgeClass}">
+          ${item.badge || "—"}
+        </span>
+      </td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item["chemin relatif"] || "—"}</td>
+      <td class="px-6 py-4 text-sm text-gray-300">${item.anomaly ? "Oui" : "Non"}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function populateCockpitFilesTable(data) {
+  const tbody = document.getElementById("cockpit-files-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  data.forEach(item => {
+    const badgeClass =
+      item.etat === "Valide" || item.etat === "Actif"
+        ? "bg-green-100 text-green-800"
+        : item.etat === "Mis à jour" || item.etat === "En peuplement"
+        ? "bg-blue-100 text-blue-800"
+        : item.etat === "Sécurisé"
+        ? "bg-purple-100 text-purple-800"
+        : "bg-gray-100 text-gray-800";
+
+    const row = document.createElement("tr");
+    row.className = "hover:bg-gray-700";
+  row.innerHTML = `
+  <td class="px-6 py-4 text-sm font-medium text-gray-100">${item.nom || "—"}</td>
+  <td class="px-6 py-4 text-sm">
+    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${badgeClass}">
+      ${item.etat || "—"}
+    </span>
+  </td>
+  <td class="px-6 py-4 text-sm text-gray-300">${item.utilisation || "—"}</td>
+  <td class="px-6 py-4 text-sm text-gray-300">${item.commentaire || "—"}</td>
+`;
+    tbody.appendChild(row);
+  });
+}
+</script>
+<script>
+let roadmapChartInstance;
+let validationChartInstance;
+let todoChartInstance;
+
+// 📊 Graphe de progression de la roadmap
+function renderRoadmapProgressChart(data) {
+  const ctx = document.getElementById("roadmapProgressChart")?.getContext("2d");
+  if (!ctx) return;
+  if (roadmapChartInstance) roadmapChartInstance.destroy();
+
+  roadmapChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: data.map(p => p.phase),
+      datasets: [{
+        label: "Progression (%)",
+        data: data.map(p => p.progress),
+        backgroundColor: data.map(p =>
+          p.status === "Complete" ? "#22c55e" :
+          p.status === "En cours" ? "#facc15" : "#3b82f6"
+        ),
+        borderColor: "#334155",
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        title: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          ticks: { color: "#e2e8f0" },
+          grid: { color: "#475569" }
+        },
+        x: {
+          ticks: { color: "#e2e8f0" },
+          grid: { color: "#475569" }
+        }
+      }
+    }
+  });
+}
+
+// 🧮 Graphe de statut de validation (camembert)
+function renderValidationChecklistChart(data) {
+  const ctx = document.getElementById("validationChecklistChart")?.getContext("2d");
+  if (!ctx) return;
+  if (validationChartInstance) validationChartInstance.destroy();
+
+  const counts = data.reduce((acc, item) => {
+    acc[item.status] = (acc[item.status] || 0) + 1;
+    return acc;
+  }, {});
+
+  validationChartInstance = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: Object.keys(counts),
+      datasets: [{
+        data: Object.values(counts),
+        backgroundColor: ["#22c55e", "#ef4444", "#94a3b8"],
+        borderColor: "#1e293b",
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "right", labels: { color: "#e2e8f0" } }
+      }
+    }
+  });
+}
+
+// 🚦 Graphe anomalies vs. tâches saines
+function renderTodoInventoryChart(data) {
+  const ctx = document.getElementById("todoInventoryChart")?.getContext("2d");
+  if (!ctx) return;
+  if (todoChartInstance) todoChartInstance.destroy();
+
+  const anomalies = data.filter(d => d.anomaly).length;
+  const nonAnomalies = data.length - anomalies;
+
+  todoChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["Anomalies détectées", "Sans anomalie"],
+      datasets: [{
+        data: [anomalies, nonAnomalies],
+        backgroundColor: ["#ef4444", "#22c55e"],
+        borderColor: ["#b91c1c", "#15803d"],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { color: "#e2e8f0" },
+          grid: { color: "#475569" }
+        },
+        x: {
+          ticks: { color: "#e2e8f0" },
+          grid: { color: "#475569" }
+        }
+      }
+    }
+  });
+}
+</script>
+<script>
+function updateGlobalStats(data) {
+  const roadmap = data.roadmap || [];
+  const cockpit = data.cockpit_files || [];
+  const todo = data.todo_inventory || [];
+
+  // 📊 Calcul de la progression moyenne roadmap
+  const progressAvg = roadmap.length > 0
+    ? roadmap.reduce((sum, phase) => sum + (phase.progress || 0), 0) / roadmap.length
+    : 0;
+
+  // 🧮 Nombre d’anomalies dans les tâches à revoir
+  const anomalies = todo.filter(t => t.anomaly).length;
+
+  // 📋 Tâches actives : roadmap + inventaire
+  const roadmapTasks = roadmap.filter(p =>
+    ["En cours", "Planifiée"].includes(p.status)
+  ).length;
+  const todoTasks = todo.filter(t =>
+    ["En cours", "À revoir", "À traiter"].includes(t.statut)
+  ).length;
+
+  // 📌 Injection dans le DOM
+  document.getElementById("roadmap-progress-stat").innerText = `${Math.round(progressAvg)}%`;
+  document.getElementById("audited-files-stat").innerText = cockpit.length;
+  document.getElementById("anomalies-stat").innerText = anomalies;
+  document.getElementById("tasks-in-progress-stat").innerText = roadmapTasks + todoTasks;
+}
+</script>
+<script>
+  // 🎛️ Gestion dynamique des onglets
+  document.addEventListener("DOMContentLoaded", () => {
+    const tabs = document.querySelectorAll(".tab-button");
+    const contents = document.querySelectorAll(".tab-content");
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        contents.forEach(c => c.classList.add("hidden"));
+
+        tab.classList.add("active");
+        const target = tab.dataset.tabTarget;
+        document.getElementById(target)?.classList.remove("hidden");
+      });
+    });
+
+    // Active le premier onglet visible par défaut
+    tabs[0]?.click();
+  });
+
+  // 📤 Export d’un onglet courant vers CSV ou PDF
+  function exportCurrentTab(format) {
+    const activeTab = document.querySelector(".tab-button.active")?.dataset.tabTarget;
+    if (!activeTab) return;
+
+    const tabMap = {
+      roadmap: { data: payloadData.roadmap, filename: "roadmap_oliplus", headers: ["Phase", "Progression", "Statut", "Description"], keys: ["phase", "progress", "status", "description"] },
+      "project-structure": { data: payloadData.project_structure, filename: "structure_oliplus", headers: ["ID", "Nom", "Statut", "Chemin"], keys: ["id", "name", "status", "path"] },
+      "validation-checklist": { data: payloadData.validation_checklist, filename: "validation_oliplus", headers: ["Nom", "Statut"], keys: ["name", "status"] },
+      "grey-areas": { data: payloadData.grey_areas, filename: "zones_oliplus", headers: ["Nom", "Raison"], keys: ["name", "reason"] },
+      "software-fragments": { data: payloadData.software_fragments, filename: "fragments_oliplus", headers: ["Nom", "Type", "Statut", "Version", "Dernière modif", "Chemin"], keys: ["name", "type", "status", "version", "last modified", "path"] },
+      "software-fusion-catalog": { data: payloadData.software_fusion_catalog, filename: "fusion_oliplus", headers: ["ID", "Description", "Type", "Statut", "Proposée", "Exécutée"], keys: ["id", "description", "type", "status", "proposed date", "executed date"] },
+      "todo-inventory": { data: payloadData.todo_inventory, filename: "todo_oliplus", headers: ["Nom", "Type", "Statut", "Badge", "Chemin", "Anomalie"], keys: ["nom", "type", "statut", "badge", "chemin relatif", "anomaly"] },
+      "cockpit-files": { data: payloadData.cockpit_files, filename: "fichiers_oliplus", headers: ["Nom", "État", "Utilisation", "Commentaire"], keys: ["nom", "etat", "utilisation", "commentaire"] }
+    };
+
+    const tab = tabMap[activeTab];
+    if (!tab) return;
+
+    const now = new Date().toISOString().slice(0, 10);
+    const file = `${tab.filename}_${now}`;
+
+    if (format === "csv") {
+      const csv = [tab.headers.join(",")];
+      tab.data.forEach(row => {
+        const line = tab.keys.map(k => `"${(row[k] ?? "").toString().replace(/"/g, '""')}"`).join(",");
+        csv.push(line);
+      });
+
+      const blob = new Blob([csv.join("\r\n")], { type: "text/csv" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = file + ".csv";
+      link.click();
+      showToast(`✅ Export CSV : ${file}.csv`);
+    }
+
+    if (format === "pdf") {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const rows = tab.data.map(row => tab.keys.map(k => row[k] ?? ""));
+      doc.setFontSize(12);
+      doc.text(file.replace(/_/g, " "), 14, 20);
+      doc.autoTable({
+        startY: 28,
+        head: [tab.headers],
+        body: rows,
+        theme: "striped",
+        headStyles: { fillColor: [55, 65, 81], textColor: [255, 255, 255] },
+        styles: { fontSize: 8, cellPadding: 2, textColor: [226, 232, 240] },
+        bodyStyles: { fillColor: [31, 41, 55] }
+      });
+      doc.save(file + ".pdf");
+      showToast(`✅ Export PDF : ${file}.pdf`);
+    }
+  }
+
+function showToast(message, type = "success") {
+  const colorMap = {
+    success: "bg-green-600",
+    info: "bg-blue-600",
+    warning: "bg-yellow-600",
+    error: "bg-red-600"
+  };
+
+  const iconMap = {
+    success: "✔️",
+    info: "ℹ️",
+    warning: "⚠️",
+    error: "❌"
+  };
+
+  const toast = document.createElement("div");
+  toast.className = `fixed bottom-6 right-6 ${colorMap[type] || "bg-gray-700"} text-white px-4 py-2 rounded shadow-lg opacity-0 transition-opacity duration-300 z-50 flex items-center space-x-2`;
+  toast.innerHTML = `
+    <span>${iconMap[type] || "💬"}</span>
+    <span>${message}</span>
+  `;
+
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("opacity-100"));
+  setTimeout(() => {
+    toast.classList.remove("opacity-100");
+    setTimeout(() => toast.remove(), 500);
+  }, 3000);
+}
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,81 @@
+Plan de Commercialisation OliPLUS - Projet OIPILUS
+Ce document formalise la vision stratégique et le plan opérationnel du projet OIPILUS, en vue de sa commercialisation. Il sert de référence pour l'équipe de développement et les parties prenantes, assurant une compréhension commune des objectifs et de la feuille de route.
+
+1. Vision et Objectifs Stratégiques
+Titre du Projet : OIPILUS - Outil Intégré de Pilotage des Impacts Logistiques Urbains et Sociaux
+
+Mission : Fournir une plateforme intelligente et modulaire permettant d'analyser et d'optimiser les flux logistiques en milieu urbain, en considérant leurs impacts environnementaux et sociaux.
+
+Objectifs Clés :
+
+Performance : Atteindre un temps de réponse inférieur à 500 ms pour 95% des requêtes d'analyse.
+
+Modularité : Déployer une architecture de micro-services permettant l'ajout de modules spécifiques (ex. : TRAITEMENT, S2E_de_Olivier) sans impacter le cœur du système.
+
+Commercialisation : Lancer une version Beta stable pour les premiers clients en 2026.
+
+2. Architecture Technique et Stack
+Architecture : Micro-services, orientée API.
+Langages : Python, C.
+Frameworks : Streamlit pour l'interface utilisateur, FastAPI pour les API backend.
+Base de données : PostgreSQL.
+Conteneurisation : Docker.
+
+Modules Fonctionnels (statut initial) :
+
+core/ : Fichiers principaux, incluant les scripts de lancement (launch_streamlit.py).
+
+OIPILUS_universal_launcher.py : Cœur du système, orchestrateur des modules.
+
+modules/ : Répertoire des modules métier (TRAITEMENT, S2E_de_Olivier, mod_modules).
+
+data/ : Données structurées (fichiers JSON, XML, cartographies).
+
+docs/ : Documentation et procédures.
+
+logs/ : Journaux d'activité pour le suivi et le débogage.
+
+tests/ : Tests unitaires et d'intégration.
+
+3. Feuille de Route (Roadmap)
+Phases de développement
+MVP (Minimum Viable Product) : * Objectif : Valider la faisabilité technique et le concept de base.
+
+Tâches : Refonte de la structure, nettoyage des dépendances, création de streamlit_config.yaml et launch_streamlit.py.
+
+Statut : En cours (Phase de refonte).
+
+Alpha Interne :
+
+Objectif : Tester la stabilité et les fonctionnalités de base avec l'équipe interne.
+
+Tâches : Intégration complète des modules TRAITEMENT et S2E_de_Olivier, implémentation de la connexion à la base de données PostgreSQL.
+
+Statut : Planifié.
+
+Beta Privée :
+
+Objectif : Recueillir les retours de clients "pilotes" sur l'UX et les performances.
+
+Tâches : Développement du tableau de bord complet, intégration de l'authentification, déploiement sur un environnement de staging.
+
+Statut : Planifié.
+
+Lancement Commercial :
+
+Objectif : Lancer la version 1.0 du produit sur le marché.
+
+Tâches : Finalisation de la documentation, mise en place des outils de support client, campagne de marketing.
+
+Statut : Planifié.
+
+4. Risques et Arbitrages
+Risque : Délais dans la refonte de la structure, impactant la roadmap.
+Mitigation : Allouer des ressources supplémentaires ou simplifier les premières étapes de l'architecture si nécessaire.
+
+Risque : Problèmes de performance avec Streamlit pour des jeux de données volumineux.
+Mitigation : Utiliser des requêtes asynchrones, optimiser les requêtes SQL, et envisager des arbitrages techniques (par exemple, un backend plus robuste avec FastAPI pour les traitements lourds).
+
+Arbitrage : Décision de ne pas intégrer immédiatement toutes les fonctionnalités du module TRAITEMENT pour respecter le calendrier du MVP. Les fonctionnalités seront ajoutées progressivement dans les versions ultérieures.
+
+Note : Ce document est un outil évolutif. Les modifications majeures doivent être validées en équipe et communiquées via le tableau de bord.

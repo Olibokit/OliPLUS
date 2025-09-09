@@ -1,0 +1,41 @@
+# 🧠 Structure du Cockpit IA – Projet OliPLUS
+
+Ce document définit la logique du tableau de bord IA pour le projet OliPLUS. Il vise à refléter l’état réel d’avancement du logiciel, en se basant sur les dossiers/extensions présents dans le répertoire `OIPLUS`.
+
+---
+
+## 🎯 Objectif
+
+Créer un cockpit dynamique qui :
+- Visualise les modules traités, en cours ou manquants
+- Met en évidence les briques absentes ou non pensées
+- Permet à tout développeur futur de comprendre immédiatement l’état du projet
+- Sert de base pour optimiser, corriger et structurer le logiciel
+
+---
+
+## 📁 Logique par dossier
+
+Chaque dossier du répertoire `OIPLUS` est interprété comme une **brique fonctionnelle** du projet.
+
+| État du dossier/module        | Interprétation cockpit        | Action recommandée |
+|------------------------------|-------------------------------|---------------------|
+| Dossier présent + fichiers actifs | Module traité ou en cours | Suivi normal |
+| Dossier présent mais vide     | Brique manquante ou en attente | À compléter ou à supprimer |
+| Dossier absent mais attendu   | Bug potentiel ou oubli structurel | À créer ou à documenter |
+| Dossier obsolète ou doublon   | Risque de confusion ou conflit | À fusionner ou archiver |
+
+---
+
+## 📊 Barre d’avancement
+
+L’avancement du projet est calculé dynamiquement selon :
+- Le nombre total de dossiers/modules
+- Le nombre de modules traités ou actifs
+- Le poids ou la criticité de chaque module (optionnel)
+
+Exemple :
+```yaml
+modules_total: 120
+modules_traités: 45
+progression: 37.5%

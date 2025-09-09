@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cockpit Modules — Suivi & Avancement</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'cockpit-bg': '#1e293b',
+            'cockpit-panel': '#334155',
+            'cockpit-accent': '#60a5fa',
+            'status-success': '#16a34a',
+            'status-warn': '#facc15',
+            'status-error': '#ef4444',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-cockpit-bg text-white p-6 font-sans">
+
+  <div class="max-w-6xl mx-auto">
+    <header class="text-center mb-10">
+      <h1 class="text-4xl font-bold text-cockpit-accent">📊 Cockpit de Suivi des Modules</h1>
+      <p class="text-gray-400 mt-2">Avancement, criticité et fichiers manquants</p>
+    </header>
+
+    <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
+      <!-- RH -->
+      <div class="bg-cockpit-panel p-4 rounded-lg shadow text-left">
+        <h2 class="text-xl font-bold text-cockpit-accent mb-2">RH</h2>
+        <p class="text-sm text-gray-300 mb-1">Avancement : <span class="text-status-success font-bold">80%</span></p>
+        <p class="text-sm text-gray-300 mb-2">Criticité : 5</p>
+        <h3 class="text-sm text-gray-400 font-semibold mb-1">📂 Fichiers manquants :</h3>
+        <ul class="list-disc list-inside text-gray-300">
+          <li>tests_rh_launcher.py</li>
+          <li>README.rh.md</li>
+        </ul>
+      </div>
+
+      <!-- Admin -->
+      <div class="bg-cockpit-panel p-4 rounded-lg shadow text-left">
+        <h2 class="text-xl font-bold text-cockpit-accent mb-2">Admin</h2>
+        <p class="text-sm text-gray-300 mb-1">Avancement : <span class="text-status-warn font-bold">65%</span></p>
+        <p class="text-sm text-gray-300 mb-2">Criticité : 3</p>
+        <h3 class="text-sm text-gray-400 font-semibold mb-1">📂 Fichiers manquants :</h3>
+        <ul class="list-disc list-inside text-gray-300">
+          <li>admin_logs_test.py</li>
+          <li>admin_dashboard.yaml</li>
+        </ul>
+      </div>
+
+      <!-- Finances -->
+      <div class="bg-cockpit-panel p-4 rounded-lg shadow text-left">
+        <h2 class="text-xl font-bold text-cockpit-accent mb-2">Finances</h2>
+        <p class="text-sm text-gray-300 mb-1">Avancement : <span class="text-status-success font-bold">90%</span></p>
+        <p class="text-sm text-gray-300 mb-2">Criticité : 5</p>
+        <h3 class="text-sm text-gray-400 font-semibold mb-1">📂 Fichiers manquants :</h3>
+        <ul class="list-disc list-inside text-gray-300">
+          <li>README.finances.md</li>
+        </ul>
+      </div>
+
+      <!-- Édition -->
+      <div class="bg-cockpit-panel p-4 rounded-lg shadow text-left">
+        <h2 class="text-xl font-bold text-cockpit-accent mb-2">Édition (Auteurs/Illustrateurs)</h2>
+        <p class="text-sm text-gray-300 mb-1">Avancement : <span class="text-status-error font-bold">50%</span></p>
+        <p class="text-sm text-gray-300 mb-2">Criticité : 4</p>
+        <h3 class="text-sm text-gray-400 font-semibold mb-1">📂 Fichiers manquants :</h3>
+        <ul class="list-disc list-inside text-gray-300">
+          <li>editor_module_test.py</li>
+          <li>illustrateur_view.html</li>
+          <li>README.edition.md</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="bg-cockpit-panel p-6 rounded-lg shadow text-center">
+      <h2 class="text-2xl font-semibold mb-2">🧮 Score Global Pondéré</h2>
+      <p class="text-gray-300 mb-4">Calculé selon l’avancement et la criticité des modules</p>
+      <p class="text-4xl font-bold text-cockpit-accent">
+        <span id="score-global">...</span>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const modules = [
+      { nom: 'RH', avancement: 80, poids: 5 },
+      { nom: 'Admin', avancement: 65, poids: 3 },
+      { nom: 'Finances', avancement: 90, poids: 5 },
+      { nom: 'Édition', avancement: 50, poids: 4 }
+    ];
+
+    const totalPoids = modules.reduce((acc, m) => acc + m.poids, 0);
+    const totalScore = modules.reduce((acc, m) => acc + m.avancement * m.poids, 0);
+    const scoreGlobal = (totalScore / totalPoids).toFixed(1);
+
+    document.getElementById('score-global').textContent = `${scoreGlobal}%`;
+  </script>
+
+</body>
+</html>

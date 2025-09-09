@@ -1,0 +1,34 @@
+Comprendre le Plan de Classification OliPLUS
+La Logique derrière le Plan
+Le plan de classification d'OliPLUS est bien plus qu'une simple arborescence de dossiers. C'est une stratégie de gouvernance documentaire qui dicte la manière dont votre information est structurée, gérée, et sécurisée.
+
+Plutôt que de laisser les utilisateurs créer des dossiers aléatoires, le logiciel OliPLUS lit un fichier de référence, comme un plan d'architecte, pour construire l'environnement documentaire. Cette approche garantit une cohérence et une conformité totales, car chaque niveau de l'arborescence est prédéfini et immuable sans une mise à jour officielle.
+
+Structure et Automatisation
+Le plan est un fichier YAML lisible par une machine, mais conçu pour être compris par un humain. Chaque branche et chaque niveau ont des attributs précis qui déclenchent des actions automatiques dans le logiciel :
+
+code & titre : Identifient de manière unique le type de document (ex: 01.01 pour "Dossiers employés").
+
+conservation : Indique la durée de vie légale du document. Le logiciel peut générer des alertes de destruction une fois cette durée atteinte.
+
+accès : Définit qui peut voir, modifier ou archiver les documents à ce niveau. OliPLUS applique automatiquement ces permissions.
+
+déclencheurs : Permettent d'automatiser des actions basées sur des événements (ex: archiver le dossier d'un employé au moment de son départ).
+
+plan_de_classification:
+  version: 1.0
+  publié_le: 2025-09-01
+  description: >
+    Plan de classification figé pour structurer les documents RH et financiers
+    selon des règles archivistiques et des niveaux d’accès.
+  branches:
+    - code: 01
+      titre: Ressources Humaines
+      niveaux:
+        - code: 01.01
+          titre: Dossiers employés
+          conservation: 7 ans après départ
+          accès: restreint
+          déclencheurs:
+            - type: archivage
+              condition: départ_employé

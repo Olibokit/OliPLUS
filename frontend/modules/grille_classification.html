@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>OliPLUS — Grille de Classification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="data/structure.css" />
+</head>
+<body class="bg-gray-100 font-sans p-6 transition-colors duration-300">
+
+  <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">
+    🧭 Structure documentaire OliPLUS
+  </h1>
+  <p class="text-center text-gray-600 mb-6 text-sm">
+    Cette grille cockpit présente les modules, scripts et fragments du système documentaire OliPLUS, classés par typologie et usage.
+  </p>
+
+  <!-- 🔗 Menu cockpit -->
+  <nav class="text-center mb-6 space-x-4">
+    <a href="structure.html" class="text-blue-600 font-semibold hover:underline">🧭 Structure</a>
+    <a href="oliplus-dashboard-dynamic.html" class="text-blue-600 font-semibold hover:underline">📊 Dashboard</a>
+    <a href="pages/classement-livres.html" class="text-blue-600 font-semibold hover:underline">📚 Classement des livres</a>
+  </nav>
+
+  <!-- 🌓 Mode sombre -->
+  <div class="text-center mb-6">
+    <button id="toggleDarkMode" class="filter-button">🌙 Mode Sombre</button>
+  </div>
+
+  <!-- 📁 Conteneur dynamique -->
+  <div id="structureContainer" class="space-y-4 max-w-5xl mx-auto"></div>
+
+  <!-- 🔌 Script cockpit -->
+  <script src="data/structureViewer.js"></script>
+  <script>
+    document.getElementById("toggleDarkMode").addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
+    });
+  </script>
+</body>
+</html>

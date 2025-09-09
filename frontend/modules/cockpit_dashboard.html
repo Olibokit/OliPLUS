@@ -1,0 +1,42 @@
+<!-- cockpit_dashboard.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🛫 Cockpit OliPLUS</title>
+  <link href="tailwind.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-100 text-gray-900 font-sans">
+  <header class="p-4 bg-blue-800 text-white text-xl font-bold shadow">
+    🛫 Cockpit OliPLUS — Tableau de bord
+  </header>
+
+  <main class="p-6 space-y-10">
+    <!-- Section graphique -->
+    <section id="charts" class="bg-white p-6 rounded shadow">
+      <h2 class="text-lg font-bold mb-4">📊 Indicateurs cockpit</h2>
+      <canvas id="cockpitChart" class="w-full h-64"></canvas>
+    </section>
+
+    <!-- Section export -->
+    <section id="export" class="bg-white p-6 rounded shadow">
+      <h2 class="text-lg font-bold mb-4">📦 Export cockpit</h2>
+      <div class="space-x-4">
+        <button onclick="exportCSV()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+          Export CSV
+        </button>
+        <button onclick="exportXLSX()" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+          Export XLSX
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Scripts cockpitifiés -->
+  <script src="Chart.min.js"></script>
+  <script src="SheetJS.min.js"></script>
+  <script src="injectCockpit.js"></script>
+  <script src="exportCockpit.js"></script>
+</body>
+</html>
