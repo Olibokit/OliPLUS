@@ -1,0 +1,34 @@
+# 🐍 Base image Python optimisée
+FROM python:3.11-slim AS base
+
+# 📌 Variables d'environnement
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    POETRY_VERSION=1.8.3 \
+    PATH="/root/.local/bin:$PATH"
+
+# 📂 Répertoire de travail
+WORKDIR /app
+
+# 🛠️ Dépendances système minimales
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl build-essential libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# 📦 Installation de Poetry
+RUN pip install --no-cache-dir poetry==$POETRY_VERSION
+
+# 📄 Copie des fichiers de dépendances (depuis la racine du projet)
+COPY pyproject.toml poetry.lock ./
+
+# 📥 Installation des dépendances sans les dev
+RUN poetry install --no-root --only main --no-interaction --no-ansi
+
+# 📂 Copie du code source (uniquement le backend)
+COPY backend/ .
+
+# 🚪 Port exposé
+EXPOSE 8000
+
+# ▶️ Commande de lancement
+CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

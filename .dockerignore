@@ -1,44 +1,62 @@
-# Fichiers Python compilés
+# ─── Python ─────────────────────────────────────────────
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.Python
 
-# Caches et artefacts
+# ─── Caches et artefacts ────────────────────────────────
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
 .cache/
+coverage/
 *.log
+logs/
 
-# Environnements virtuels
+# ─── Environnements virtuels ────────────────────────────
 .env/
 .venv/
 venv/
 
-# Dépendances locales
+# ─── Dépendances locales ────────────────────────────────
 node_modules/
 dist/
 build/
 
-# Fichiers sensibles ou inutiles
-*.egg-info/
-*.sqlite3
-*.db
+# ─── Fichiers sensibles ─────────────────────────────────
+.env
+.env.*
 *.pem
 *.key
+*.crt
+*.sqlite3
+*.db
 
-# Fichiers de config perso
+# ─── Config perso / locales ─────────────────────────────
 .env.local
 .env.dev
 .env.test
 
-# IDE et OS
+# ─── IDE et OS ──────────────────────────────────────────
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
 
-# Dockerfiles spécifiques (si non utilisés dans ce build)
+# ─── Git ────────────────────────────────────────────────
+.git
+.gitignore
+
+# ─── Dockerfiles non utilisés ───────────────────────────
 Dockerfile.dev
 Dockerfile.ui
 Dockerfile.backend
+
+# ─── Données locales / temporaires ──────────────────────
+tmp/
+data/

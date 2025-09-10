@@ -44,8 +44,8 @@ services:
   # 🔗 FastAPI Backend
   api:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.api
+      context: .
+      dockerfile: backend/Dockerfile.api
       args:
         ENVIRONMENT: ${ENVIRONMENT}
     container_name: cockpit-api
@@ -77,8 +77,8 @@ services:
   # 🧪 Celery Workers
   workers:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.workers
+      context: .
+      dockerfile: backend/Dockerfile.workers
     container_name: cockpit-workers
     command: ["celery", "-A", "cockpit_core.tasks", "worker", "--loglevel=INFO"]
     depends_on:
@@ -110,8 +110,8 @@ services:
   # 🖥️ Streamlit UI
   cockpit:
     build:
-      context: ./frontend/streamlit_app
-      dockerfile: Dockerfile.streamlit
+      context: .
+      dockerfile: frontend/streamlit_app/Dockerfile.streamlit
     container_name: cockpit-ui
     ports:
       - "8501:8501"
