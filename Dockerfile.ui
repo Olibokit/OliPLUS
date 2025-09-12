@@ -1,22 +1,27 @@
-# Dockerfile.ui
 FROM python:3.10-slim
 
+# 📁 Dossier de travail
 WORKDIR /app
 
+# 🧰 Dépendances système
 RUN apt-get update && apt-get install -y curl
 
-# Install Poetry
+# 📦 Installation de Poetry
 RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="/root/.local/bin:$PATH"
 
-# Copy project files
+# 📁 Copie des fichiers du projet
 COPY pyproject.toml poetry.lock* ./
 COPY frontend/ frontend/
 COPY config/ config/
 
-# Install UI dependencies
+# 📦 Installation des dépendances UI
 RUN poetry install --no-root --only main --extras "ui"
 
+# 🌐 Port exposé pour Streamlit
 EXPOSE 8501
 
-CMD ["poetry", "run", "streamlit", "run", "frontend/dashboard.py"]
+# 🚀 Commande de lancement cockpitifiée
+CMD ["poetry", "run", "streamlit", "run", "frontend/dashboard.py", \
+     "--server.port=8501", "--server.address=0.0.0.0", \
+     "--server.enableCORS=false", "--server.enableXsrfProtection=false"]

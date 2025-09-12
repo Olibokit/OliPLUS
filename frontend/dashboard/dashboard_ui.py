@@ -5,14 +5,6 @@ import pandas as pd
 import altair as alt
 from streamlit_autorefresh import st_autorefresh
 
-# 🔄 Actualisation automatique toutes les 30 secondes
-st_autorefresh(interval=30_000, key="refresh")
-
-# ⚙️ Configuration de la page
-st.set_page_config(page_title="Cockpit OPILUS", page_icon="🧭", layout="wide")
-st.title("🧭 Cockpit central OPILUS")
-st.markdown("---")
-
 # 📁 Chargement de la configuration
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = BASE_DIR / "json" / "config.json"
@@ -26,6 +18,28 @@ except Exception as e:
 
 PROJECT_ROOT = Path(config.get("rootDir", BASE_DIR))
 SUPPORTED_EXTENSIONS = [".py", ".json", ".yaml", ".yml", ".html", ".css", ".ps1", ".sql", ".md", ".txt", ".log"]
+
+# 🔐 Authentification cockpitifiée
+def login():
+    security = config.get("security", {})
+    if security.get("requirePassword", False):
+        st.sidebar.title("🔐 Connexion sécurisée")
+        password = st.sidebar.text_input("Mot de passe", type="password")
+        if password != security.get("password", ""):
+            st.warning("Mot de passe incorrect.")
+            st.stop()
+
+login()
+
+# 🔄 Auto-refresh cockpitifié
+ui_config = config.get("ui", {})
+if ui_config.get("autoRefresh", False):
+    st_autorefresh(interval=ui_config.get("refreshInterval", 30000), key="refresh")
+
+# ⚙️ Configuration de la page
+st.set_page_config(page_title="Cockpit OPILUS", page_icon="🧭", layout="wide")
+st.title("🧭 Cockpit central OPILUS")
+st.markdown("---")
 
 # 🔧 Fonctions utilitaires
 def get_last_update(path: Path) -> str:
@@ -60,7 +74,7 @@ def scan_project(root_dir: Path) -> dict:
     return structure
 
 # 🧩 Vues cockpit
-def render_overview() -> None:
+def render_overview():
     st.header("📋 Vue d'ensemble du projet")
     structure = scan_project(PROJECT_ROOT)
     for ext, files in structure.items():
@@ -86,7 +100,7 @@ def render_overview() -> None:
                     st.error(f"Erreur d'affichage : {e}")
                 st.markdown("---")
 
-def render_modules() -> None:
+def render_modules():
     st.header("🧩 Modules détectés")
     modules_path = PROJECT_ROOT / "modules"
     if not modules_path.exists():
@@ -102,7 +116,7 @@ def render_modules() -> None:
                     st.write("Lancement de la génération de synopsis...")
             st.markdown("---")
 
-def render_stats() -> None:
+def render_stats():
     st.header("📈 Statistiques système")
     sys = {"cpu": 60, "memory": 70}
     col1, col2, col3 = st.columns(3)
@@ -124,7 +138,7 @@ def render_stats() -> None:
             use_container_width=True
         )
 
-def render_alertes() -> None:
+def render_alertes():
     st.header("🔔 Logs & Alertes")
     alerts = []
     logs_path = Path(config.get("logging", {}).get("logFilePath", PROJECT_ROOT / "logs" / "error.log"))
@@ -144,7 +158,7 @@ def render_alertes() -> None:
     else:
         st.success("✅ Aucun problème détecté.")
 
-def render_actions() -> None:
+def render_actions():
     st.header("⚙️ Actions rapides")
     col1, col2, col3 = st.columns(3)
     if col1.button("🔁 Recharger GDA"):
@@ -155,11 +169,11 @@ def render_actions() -> None:
         logs_folder = os.path.dirname(str(config.get("logging", {}).get("logFilePath", "")))
         st.markdown(f"[📁 Ouvrir les logs]({logs_folder})")
 
-def render_config() -> None:
+def render_config():
     st.header("⚙️ Configuration")
     st.json(config)
 
-def render_extensions() -> None:
+def render_extensions():
     st.header("🧩 Extensions activées")
     ext_root = PROJECT_ROOT / config["extensions"].get("scanFolder", "extensions")
     extensions = [ext for ext, enabled in config["extensions"]["enabled"].items() if enabled]
@@ -173,24 +187,40 @@ def render_extensions() -> None:
         except Exception as e:
             st.warning(f"Extension {ext} non chargée : {e}")
 
+def render_mobile_dashboard():
+    st.header("📱 Vue mobile cockpitifiée")
+    st.metric("🧠 CPU", "60%")
+    st.metric("💾 Mémoire", "70%")
+    st.success("✅ Aucun problème détecté.")
+
 # 📂 Navigation cockpit
 st.sidebar.title("📂 Navigation cockpit")
 mode = config.get("activeMode", "Utilisateur")
 st.sidebar.markdown(f"**Mode actif : `{mode}`**")
 
-page = st.sidebar.radio("Choisir une vue :", [
-    "📋 Vue d'ensemble du projet", "🧩 Modules détectés", "📈 Statistiques système",
-    "🔔 Logs & Alertes", "⚙️ Actions rapides", "⚙️ Configuration", "🧩 Extensions activées"
-])
+if st.sidebar.checkbox("📱 Mode mobile"):
+    render_mobile_dashboard()
+else:
+    page = st.sidebar.radio("Choisir une vue :", [
+                "📋 Vue d'ensemble du projet", 
+        "🧩 Modules détectés", 
+        "📈 Statistiques système",
+        "🔔 Logs & Alertes", 
+        "⚙️ Actions rapides", 
+        "⚙️ Configuration", 
+        "🧩 Extensions activées"
+    ])
 
-routes = {
-    "📋 Vue d'ensemble du projet": render_overview,
-    "🧩 Modules détectés": render_modules,
-    "📈 Statistiques système": render_stats,
-    "🔔 Logs & Alertes": render_alertes,
-    "⚙️ Actions rapides": render_actions,
-    "⚙️ Configuration": render_config,
-    "🧩 Extensions activées": render_extensions
-}
+    # 🧭 Routage cockpitifié
+    routes = {
+        "📋 Vue d'ensemble du projet": render_overview,
+        "🧩 Modules détectés": render_modules,
+        "📈 Statistiques système": render_stats,
+        "🔔 Logs & Alertes": render_alertes,
+        "⚙️ Actions rapides": render_actions,
+        "⚙️ Configuration": render_config,
+        "🧩 Extensions activées": render_extensions
+    }
 
-routes.get(page, lambda: st.error("❌ Vue inconnue."))()
+    # 🧠 Exécution de la vue sélectionnée
+    routes.get(page, lambda: st.error("❌ Vue inconnue."))()

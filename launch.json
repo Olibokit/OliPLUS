@@ -1,0 +1,28 @@
+{
+  "docker_compose": "docker-compose.yaml",
+  "services": ["db", "redis", "api", "ui"],
+  "streamlit_port": 8501,
+  "open_browser": true,
+  "activeMode": "Utilisateur",
+  "notifications": {
+    "enableToast": true,
+    "slackWebhook": "https://hooks.slack.com/services/XXXXXXXXX/XXXXXXXXX/XXXXXXXXX"
+  },
+  "extensions": {
+    "scanFolder": "extensions",
+    "enabled": {
+      "finance": true,
+      "audit": true,
+      "gemini": true
+    }
+  },
+  "security": {
+    "requirePassword": true,
+    "password": "oliplus2025"
+  },
+  "ui": {
+    "theme": "light",
+    "autoRefresh": true,
+    "refreshInterval": 30000
+  }
+}
